@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const AttemptBox = ({ weight, status } : {weight : number, status : string}) => {
+const AttemptBox = ({ weight, status }: { weight: number, status: string }) => {
   const getColor = () => {
     if (status === 'good') return 'bg-green-500';
     if (status === 'fail') return 'bg-red-500';
@@ -44,20 +44,23 @@ export default function PowerliftingOverlay({
       >
         {visible ? 'Hide Overlay' : 'Show Overlay'}
       </button>
+
       <AnimatePresence>
         {visible && (
           <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
-            transition={{ duration: 0.3 }}
-            className="bg-blue-900 text-white rounded-xl p-4 shadow-xl w-[600px]"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            exit={{ scaleX: 0 }}
+            transition={{ duration: 1.2, ease: 'easeInOut' }}
+            style={{ transformOrigin: 'left' }}
+            className="bg-blue-900/35 text-white rounded-xl p-4 shadow-xl w-[600px] origin-left backdrop-blur-sm"
           >
             <div className="flex justify-between text-sm">
               <div className="font-bold">{category}</div>
               <div>{rankInfo}</div>
               <div className="bg-yellow-400 text-black font-bold px-2 rounded">{timer}</div>
             </div>
+
             <div className="mt-2 flex items-center gap-4">
               <div className="flex flex-col items-center">
                 <div className="text-lg">{lifter.flag}</div>
@@ -76,10 +79,13 @@ export default function PowerliftingOverlay({
                 </div>
               </div>
             </div>
-            <div className="text-right text-sm text-gray-300 mt-1">ELEIKO - {competition}</div>
+
+            <div className="text-right text-sm text-gray-300 mt-1">
+              ELEIKO - {competition}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
     </div>
   );
-} 
+}

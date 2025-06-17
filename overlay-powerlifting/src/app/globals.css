@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: transparent; /* fond transparent */
   --foreground: #171717;
 }
 
@@ -14,7 +14,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: transparent; /* aussi transparent en mode sombre */
     --foreground: #ededed;
   }
 }
@@ -23,4 +23,6 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  height: 100vh; /* s’assurer que ça couvre toute la hauteur */
 }
