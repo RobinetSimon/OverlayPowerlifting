@@ -1,3 +1,4 @@
+// components/PowerliftingOverlay.tsx
 'use client'
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,7 +9,6 @@ const AttemptBox = ({ weight, status }: { weight: number, status: string }) => {
     if (status === 'fail') return 'bg-red-500';
     return 'bg-gray-300';
   };
-
   return (
     <div className={`rounded px-2 py-1 text-white font-bold text-sm ${getColor()}`}>
       {weight}
@@ -16,24 +16,37 @@ const AttemptBox = ({ weight, status }: { weight: number, status: string }) => {
   );
 };
 
+interface Attempt {
+  weight: number;
+  status: string;
+}
+
+interface LifterInfo {
+  flag: string;
+  country: string;
+  name: string;
+  firstName: string;
+}
+
+interface PowerliftingOverlayProps {
+  category: string;
+  rankInfo: string;
+  timer: string;
+  lifter: LifterInfo;
+  attempts: Attempt[];
+  total: number;
+  competition: string;
+}
+
 export default function PowerliftingOverlay({
-  category = '120+kg',
-  rankInfo = 'RANK 15 to 12',
-  timer = '00:54',
-  lifter = {
-    flag: '🇳🇴',
-    country: 'NOR',
-    name: 'Sutterud Westbye',
-    firstName: 'Bjorn Andre',
-  },
-  attempts = [
-    { weight: 195.0, status: 'good' },
-    { weight: 205.0, status: 'good' },
-    { weight: 212.5, status: 'pending' },
-  ],
-  total = 595.0,
-  competition = 'CHEMNITZ 2025',
-}) {
+  category,
+  rankInfo,
+  timer,
+  lifter,
+  attempts,
+  total,
+  competition,
+}: PowerliftingOverlayProps) {
   const [visible, setVisible] = useState(true);
 
   return (
