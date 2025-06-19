@@ -83,16 +83,64 @@ export default function Controls() {
     channel.close();
   };
 
-  const openOverlayWindow = () => {
-    window.open('/overlay', 'OverlayWindow', 'width=700,height=300');
-  };
-
   useEffect(() => {
     sendToOverlay();
   }, [currentIndex, selectedLift, athletes]);
 
-  const launchPythonScript = () => {
+  const callApi = async () => {
+    if (!excelPath || !jsonPath) {
+      alert("Merci de renseigner les deux chemins Excel et JSON.");
+      return false;
+    }
 
+    try {
+      const params = new URLSearchParams({
+        excelPath,
+        jsonPath,
+      });
+
+      const response = await fetch(`http://localhost:3000/getData?${params.toString()}`);
+      if (!(response.status === 200)) {
+        const error = await response.json();
+        alert(`Erreur API : ${error.error || response.statusText}`);
+        return false;
+      }
+      // La réponse contient maintenant directement le JSON des athlètes
+      const json = await response.json();
+      setAthletes(json);
+
+      return true;
+    } catch (err) {
+      alert(`Erreur lors de l'appel API : ${err}`);
+      return false;
+    }
+  };
+
+
+  // Lance le script et démarre l'intervalle
+  const launchPythonScript = async () => {
+    // Si un interval est déjà actif, on l’arrête avant
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+
+    const success = await callApi();
+    if (!success) return;
+
+    // Lance la répétition toutes les intervalSec secondes
+    intervalRef.current = setInterval(() => {
+      callApi();
+    }, intervalSec * 1000);
+  };
+
+  // Arrête l'exécution répétée
+  const stopScript = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+      alert("Exécution répétée arrêtée.");
+    }
   };
 
   return (
@@ -104,7 +152,7 @@ export default function Controls() {
           <h2 className="text-xl font-semibold text-gray-800">Contrôles</h2>
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <button
-              onClick={openOverlayWindow}
+              onClick={() => window.open('/overlay', 'OverlayWindow', 'width=700,height=300')}
               className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg shadow"
             >
               Ouvrir l'Overlay
@@ -147,7 +195,7 @@ export default function Controls() {
               type="number"
               min={5}
               value={intervalSec}
-              onChange={(e) => setIntervalSec(parseInt(e.target.value))}
+              onChange={(e) => setIntervalSec(parseInt(e.target.value) || 30)}
               className="w-full p-2 border rounded"
             />
 
@@ -156,6 +204,13 @@ export default function Controls() {
               className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 mt-2 rounded-lg shadow"
             >
               Lancer le script de chargement
+            </button>
+
+            <button
+              onClick={stopScript}
+              className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 mt-2 rounded-lg shadow ml-4"
+            >
+              Arrêter le script
             </button>
           </div>
         </section>

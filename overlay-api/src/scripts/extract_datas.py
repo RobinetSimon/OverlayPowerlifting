@@ -1,8 +1,16 @@
 import json
+import sys
 from openpyxl import load_workbook
 
+if len(sys.argv) < 3:
+    print("Usage: python script.py <chemin_excel> <chemin_json>")
+    sys.exit(1)
+
+chemin_excel = sys.argv[1]
+chemin_json = sys.argv[2]
+
 # Load the workbook with data_only=True to read calculated values
-wb = load_workbook("../dataset/Régional FA JEUNES COMP.xlsm", data_only=True)
+wb = load_workbook(chemin_excel, data_only=True)
 ws = wb.active
 
 # Column indices
@@ -23,10 +31,8 @@ def get_attempt_status(cell):
     fill = cell.fill
     strike = cell.font.strike
 
-    # Couleur RGB (au format ARGB 8 chiffres) — '0000000B' → 11, '0000001F' → 31
     color = fill.start_color.index if fill.start_color else None
 
-    # Traitement des codes connus
     if color in ('0000000B', 11):  # vert / valide
         return "valid"
     elif color in ('0000001F', 31) and strike:  # violet + barré = échec
@@ -38,7 +44,6 @@ def get_attempt_status(cell):
 
 athletes = []
 
-# Iterate through rows starting from row 8
 for row in ws.iter_rows(min_row=8):
     if not row[fields_index["last_name"]].value or not row[fields_index["first_name"]].value:
         continue
@@ -82,6 +87,5 @@ for row in ws.iter_rows(min_row=8):
     athletes.append(athlete)
 
 # Export the results to JSON
-output_path = "../overlay-powerlifting/public/json/datas.json"
-with open(output_path, "w", encoding="utf-8") as f:
+with open(chemin_json, "w", encoding="utf-8") as f:
     json.dump(athletes, f, indent=2, ensure_ascii=False)
