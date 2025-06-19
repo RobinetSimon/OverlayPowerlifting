@@ -9,10 +9,12 @@ export default function Controls() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedLift, setSelectedLift] = useState<'squat' | 'bench_press' | 'deadlift'>('squat');
   const channelRef = useRef<BroadcastChannel | null>(null);
+  const [progress, setProgress] = useState(0);
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Nouveaux états
-  const [jsonPath, setJsonPath] = useState('/json/datas.json');
-  const [excelPath, setExcelPath] = useState('');
+  const [jsonPath, setJsonPath] = useState('C:\Users\simon\OneDrive\Bureau\StreamBFC\ProjetOverlay\OverlayPowerlifting\overlay-powerlifting\public\json\datas.json');
+  const [excelPath, setExcelPath] = useState('C:\Users\simon\OneDrive\Bureau\StreamBFC\ProjetOverlay\OverlayPowerlifting\dataset\Régional FA JEUNES COMP.xlsm');
   const [intervalSec, setIntervalSec] = useState(30);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -119,29 +121,52 @@ export default function Controls() {
 
   // Lance le script et démarre l'intervalle
   const launchPythonScript = async () => {
-    // Si un interval est déjà actif, on l’arrête avant
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
+    }
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
     }
 
     const success = await callApi();
     if (!success) return;
 
-    // Lance la répétition toutes les intervalSec secondes
+    setProgress(0);
+    const totalDuration = intervalSec * 1000;
+    const updateRate = 100; // ms
+    let elapsed = 0;
+
+    progressIntervalRef.current = setInterval(() => {
+      elapsed += updateRate;
+      setProgress(Math.min(100, (elapsed / totalDuration) * 100));
+      if (elapsed >= totalDuration) {
+        elapsed = 0;
+        setProgress(0);
+      }
+    }, updateRate);
+
     intervalRef.current = setInterval(() => {
       callApi();
-    }, intervalSec * 1000);
+    }, totalDuration);
   };
+
 
   // Arrête l'exécution répétée
   const stopScript = () => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
-      alert("Exécution répétée arrêtée.");
     }
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+      progressIntervalRef.current = null;
+    }
+    setProgress(0);
+    alert("Exécution répétée arrêtée.");
   };
+
 
   return (
     <div className="min-h-screen bg-gray-100 py-10 px-6">
@@ -205,13 +230,20 @@ export default function Controls() {
             >
               Lancer le script de chargement
             </button>
-
             <button
               onClick={stopScript}
               className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 mt-2 rounded-lg shadow ml-4"
             >
               Arrêter le script
             </button>
+
+            <div className="w-full h-4 bg-gray-200 rounded overflow-hidden mt-2">
+              <div
+                className="h-full bg-blue-500 transition-all duration-100"
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+            
           </div>
         </section>
       </div>
