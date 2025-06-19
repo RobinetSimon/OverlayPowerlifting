@@ -1,4 +1,3 @@
-// components/PowerliftingOverlay.tsx
 'use client';
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -23,8 +22,6 @@ interface Attempt {
 }
 
 interface LifterInfo {
-  flag: string;
-  country: string;
   name: string;
   firstName: string;
 }
@@ -37,7 +34,7 @@ interface PowerliftingOverlayProps {
   attempts: Attempt[];
   total: number;
   competition: string;
-  visible: boolean; // nouveau prop
+  visible: boolean;
 }
 
 export default function PowerliftingOverlay({
@@ -68,10 +65,6 @@ export default function PowerliftingOverlay({
           </div>
 
           <div className="mt-2 flex items-center gap-4">
-            <div className="flex flex-col items-center">
-              <div className="text-lg">{lifter.flag}</div>
-              <div className="text-sm">{lifter.country}</div>
-            </div>
             <div>
               <div className="text-black text-lg font-bold">{lifter.firstName}</div>
               <div className="text-black text-xl font-bold">{lifter.name}</div>
@@ -90,8 +83,18 @@ export default function PowerliftingOverlay({
             </div>
           </div>
 
-          <div className="text-right text-sm text-gray-300 mt-1">
-            ELEIKO - {competition}
+          <div className="mt-2 flex justify-between items-center">
+            <img
+              src="/images/ffforce.png"
+              alt="Logo FFFORCE"
+              className="h-10 opacity-80 grayscale hover:grayscale-0 transition-all duration-300"
+            />
+            <div className="text-xs text-gray-300">{competition}</div>
+            <img
+              src="/images/ffforce_bfc.png"
+              alt="Logo BFC"
+              className="h-10 opacity-80 grayscale hover:grayscale-0 transition-all duration-300"
+            />
           </div>
         </motion.div>
       )}

@@ -243,7 +243,12 @@ export default function Controls() {
                 style={{ width: `${progress}%` }}
               ></div>
             </div>
-            
+
+          </div>
+
+          <div className="mt-10 flex justify-center items-center gap-8">
+            <img src="/images/ffforce.png" alt="Logo FFFORCE" className="h-35 object-contain" />
+            <img src="/images/ffforce_bfc.png" alt="Logo BFC" className="h-35 object-contain" />
           </div>
         </section>
       </div>
