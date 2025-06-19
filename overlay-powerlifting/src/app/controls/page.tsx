@@ -49,34 +49,33 @@ export default function Controls() {
     channelRef.current?.postMessage(payload);
   };
 
-const nextAthlete = () => {
-  const nextIndex = (currentIndex + 1) % athletes.length;
-  setCurrentIndex(nextIndex);
+  const nextAthlete = () => {
+    const nextIndex = (currentIndex + 1) % athletes.length;
+    setCurrentIndex(nextIndex);
 
-  const a = athletes[nextIndex];
-  const overlayData: OverlayData = {
-    category: a.weight_category,
-    rankInfo: `RANK ${nextIndex + 1}`,
-    timer: '10:00',
-    lifter: {
-      flag: '🇫🇷',
-      country: 'FRA',
-      name: a.last_name,
-      firstName: a.first_name,
-    },
-    attempts: a.attempts[selectedLift].map((at: AttemptRaw) => ({
-      weight: at.weight,
-      status: at.status === 'valid' ? 'good' : at.status === 'invalid' ? 'fail' : 'pending',
-    })),
-    total: a.total,
-    competition: 'CHAMPIONNAT FA 2025',
+    const a = athletes[nextIndex];
+    const overlayData: OverlayData = {
+      category: a.weight_category,
+      rankInfo: `RANK ${nextIndex + 1}`,
+      timer: '10:00',
+      lifter: {
+        flag: '🇫🇷',
+        country: 'FRA',
+        name: a.last_name,
+        firstName: a.first_name,
+      },
+      attempts: a.attempts[selectedLift].map((at: AttemptRaw) => ({
+        weight: at.weight,
+        status: at.status === 'valid' ? 'good' : at.status === 'invalid' ? 'fail' : 'pending',
+      })),
+      total: a.total,
+      competition: 'CHAMPIONNAT FA 2025',
+    };
+
+    const channel = new BroadcastChannel('overlay-channel');
+    channel.postMessage({ type: 'UPDATE_OVERLAY', data: overlayData });
+    channel.close();
   };
-
-  const channel = new BroadcastChannel('overlay-channel');
-  channel.postMessage({ type: 'UPDATE_OVERLAY', data: overlayData });
-  channel.close();
-};
-
 
   const openOverlayWindow = () => {
     window.open('/overlay', 'OverlayWindow', 'width=700,height=300');
@@ -87,10 +86,34 @@ const nextAthlete = () => {
   }, [currentIndex, selectedLift, athletes]);
 
   return (
-    <div className="p-4 space-y-4">
-      <button onClick={openOverlayWindow} className="bg-blue-600 text-white px-4 py-2 rounded">Ouvrir l'Overlay</button>
-      <LiftSelector selectedLift={selectedLift} onSelect={setSelectedLift} />
-      <NextAthleteButton onClick={nextAthlete} />
+    <div className="min-h-screen bg-gray-100 py-10 px-6">
+      <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-2xl p-6 space-y-6">
+        <h1 className="text-3xl font-bold text-center text-blue-700 mb-4">Gestion Stream BFC</h1>
+
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold text-gray-800">Contrôles</h2>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <button
+              onClick={openOverlayWindow}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg shadow"
+            >
+              Ouvrir l'Overlay
+            </button>
+            <LiftSelector selectedLift={selectedLift} onSelect={setSelectedLift} />
+            <NextAthleteButton onClick={nextAthlete} />
+          </div>
+        </section>
+
+        <section className="text-gray-600 text-sm text-center pt-4 border-t">
+          <p>
+            Athlète actuel :{' '}
+            {athletes[currentIndex]
+              ? `${athletes[currentIndex].first_name} ${athletes[currentIndex].last_name}`
+              : 'Chargement...'}
+          </p>
+        </section>
+
+      </div>
     </div>
   );
 }

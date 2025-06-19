@@ -21,7 +21,7 @@ export default function OverlayPage() {
 
         setTimeout(() => {
           setVisible(false);
-        }, 6000); // masque après 10 secondes
+        }, 10000); // masque après 10 secondes
       }
     };
 
