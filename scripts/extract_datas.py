@@ -1,11 +1,11 @@
 import json
 from openpyxl import load_workbook
 
-# Charger le fichier Excel
-wb = load_workbook("competition_fa.xlsx")
-ws = wb["Comp"]
+# Load the workbook with data_only=True to read calculated values
+wb = load_workbook("../dataset/Régional FA JEUNES COMP.xlsm", data_only=True)
+ws = wb.active
 
-# Index des colonnes utiles
+# Column indices
 fields_index = {
     "club": 1,
     "sex": 2,
@@ -20,23 +20,29 @@ fields_index = {
 }
 
 def get_attempt_status(cell):
-    """Retourne le statut de l'essai selon la couleur de fond et si le texte est barré."""
-    fill_color = cell.fill.start_color.rgb
-    is_strike = cell.font.strike
+    fill = cell.fill
+    strike = cell.font.strike
 
-    if fill_color == "FF00FF00":
+    # Couleur RGB (au format ARGB 8 chiffres) — '0000000B' → 11, '0000001F' → 31
+    color = fill.start_color.index if fill.start_color else None
+
+    # Traitement des codes connus
+    if color in ('0000000B', 11):  # vert / valide
         return "valid"
-    elif fill_color == "FFCCCCFF" and is_strike:
+    elif color in ('0000001F', 31) and strike:  # violet + barré = échec
         return "invalid"
-    elif fill_color is None or fill_color == "00000000":
+    elif color in ('00000000', None):
         return "pending"
     else:
         return "pending"
 
 athletes = []
 
-# Parcourir les lignes des athlètes (à partir de la 3e)
-for row in ws.iter_rows(min_row=3):
+# Iterate through rows starting from row 8
+for row in ws.iter_rows(min_row=8):
+    if not row[fields_index["last_name"]].value or not row[fields_index["first_name"]].value:
+        continue
+
     athlete = {
         "club": row[fields_index["club"]].value,
         "sex": row[fields_index["sex"]].value,
@@ -52,7 +58,6 @@ for row in ws.iter_rows(min_row=3):
         "total": row[fields_index["total"]].value
     }
 
-    # SQUAT
     for col in fields_index["squat"]:
         cell = row[col]
         athlete["attempts"]["squat"].append({
@@ -60,7 +65,6 @@ for row in ws.iter_rows(min_row=3):
             "status": get_attempt_status(cell)
         })
 
-    # BENCH PRESS
     for col in fields_index["bench"]:
         cell = row[col]
         athlete["attempts"]["bench_press"].append({
@@ -68,7 +72,6 @@ for row in ws.iter_rows(min_row=3):
             "status": get_attempt_status(cell)
         })
 
-    # DEADLIFT
     for col in fields_index["deadlift"]:
         cell = row[col]
         athlete["attempts"]["deadlift"].append({
@@ -78,8 +81,7 @@ for row in ws.iter_rows(min_row=3):
 
     athletes.append(athlete)
 
-# Exporter vers un fichier JSON
-with open("competition_results.json", "w", encoding="utf-8") as f:
+# Export the results to JSON
+output_path = "../overlay-powerlifting/public/json/datas.json"
+with open(output_path, "w", encoding="utf-8") as f:
     json.dump(athletes, f, indent=2, ensure_ascii=False)
-
-print("Export terminé dans 'competition_results.json'")

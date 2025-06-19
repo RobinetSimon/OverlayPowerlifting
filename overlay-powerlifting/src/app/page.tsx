@@ -1,16 +1,30 @@
-'use client'
+'use client';
 import React, { useEffect, useState } from 'react';
 import PowerliftingOverlay from '../components/mainOverlay';
-import data from '../data/data.json' assert { type: 'json' };
-import { AthleteRaw, OverlayData, AttemptRaw } from '../types/athlete';
 import ControlsPanel from '../components/controlsPanel';
-
-const typedData = data as AthleteRaw[];
+import { AthleteRaw, OverlayData, AttemptRaw } from '../types/athlete';
 
 export default function Page() {
+  const [typedData, setTypedData] = useState<AthleteRaw[]>([]);
   const [athleteIndex, setAthleteIndex] = useState(0);
   const [athlete, setAthlete] = useState<OverlayData | null>(null);
   const [selectedLift, setSelectedLift] = useState<'squat' | 'bench_press' | 'deadlift'>('squat');
+
+  const dataPath = process.env.REACT_APP_JSON_PATH || '/json/datas.json' ; // fallback
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(dataPath);
+        const json = await response.json();
+        setTypedData(json as AthleteRaw[]);
+      } catch (err) {
+        console.error('Erreur de chargement des données JSON:', err);
+      }
+    };
+
+    fetchData();
+  }, [dataPath]);
 
   useEffect(() => {
     if (typedData.length > 0 && athleteIndex < typedData.length) {
@@ -33,7 +47,7 @@ export default function Page() {
         competition: 'CHAMPIONNAT FA 2025',
       });
     }
-  }, [athleteIndex, selectedLift]);
+  }, [athleteIndex, selectedLift, typedData]);
 
   const statusMap = (s: string): 'good' | 'fail' | 'pending' => {
     if (s === 'valid') return 'good';
