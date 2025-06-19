@@ -1,0 +1,850 @@
+[
+  {
+    "club": "L02 - LIGUE DE FORCE BOURGOGNE-FRANCHE-COMTÉ",
+    "sex": "M",
+    "category_age": "JR",
+    "last_name": "DEMOULIN",
+    "first_name": "Alexandre",
+    "weight_category": "66 Kg",
+    "attempts": {
+      "squat": [
+        {
+          "weight": 145,
+          "status": "valid"
+        },
+        {
+          "weight": 150,
+          "status": "valid"
+        },
+        {
+          "weight": 155,
+          "status": "valid"
+        }
+      ],
+      "bench_press": [
+        {
+          "weight": 132.5,
+          "status": "valid"
+        },
+        {
+          "weight": 135,
+          "status": "invalid"
+        },
+        {
+          "weight": 135,
+          "status": "invalid"
+        }
+      ],
+      "deadlift": [
+        {
+          "weight": 175,
+          "status": "valid"
+        },
+        {
+          "weight": 182.5,
+          "status": "valid"
+        },
+        {
+          "weight": 145,
+          "status": "pending"
+        }
+      ]
+    },
+    "total": 432.5
+  },
+  {
+    "club": "L02 - LIGUE DE FORCE BOURGOGNE-FRANCHE-COMTÉ",
+    "sex": "M",
+    "category_age": "SJR",
+    "last_name": "PASTEUR",
+    "first_name": "Eliott",
+    "weight_category": "66 Kg",
+    "attempts": {
+      "squat": [
+        {
+          "weight": 137.5,
+          "status": "valid"
+        },
+        {
+          "weight": 140,
+          "status": "valid"
+        },
+        {
+          "weight": 145,
+          "status": "valid"
+        }
+      ],
+      "bench_press": [
+        {
+          "weight": 87.5,
+          "status": "valid"
+        },
+        {
+          "weight": 90,
+          "status": "valid"
+        },
+        {
+          "weight": 95,
+          "status": "valid"
+        }
+      ],
+      "deadlift": [
+        {
+          "weight": 160,
+          "status": "valid"
+        },
+        {
+          "weight": 172.5,
+          "status": "valid"
+        },
+        {
+          "weight": 180,
+          "status": "valid"
+        }
+      ]
+    },
+    "total": 420
+  },
+  {
+    "club": "L02 - LIGUE DE FORCE BOURGOGNE-FRANCHE-COMTÉ",
+    "sex": "M",
+    "category_age": "SJR",
+    "last_name": "THIEMARD SALOMON",
+    "first_name": "Kylian",
+    "weight_category": "66 Kg",
+    "attempts": {
+      "squat": [
+        {
+          "weight": 137.5,
+          "status": "valid"
+        },
+        {
+          "weight": 142.5,
+          "status": "invalid"
+        },
+        {
+          "weight": 142.5,
+          "status": "invalid"
+        }
+      ],
+      "bench_press": [
+        {
+          "weight": 90,
+          "status": "valid"
+        },
+        {
+          "weight": 95,
+          "status": "valid"
+        },
+        {
+          "weight": 97.5,
+          "status": "invalid"
+        }
+      ],
+      "deadlift": [
+        {
+          "weight": 175,
+          "status": "valid"
+        },
+        {
+          "weight": 185,
+          "status": "invalid"
+        },
+        {
+          "weight": 185,
+          "status": "valid"
+        }
+      ]
+    },
+    "total": 417.5
+  },
+  {
+    "club": "L02 - LIGUE DE FORCE BOURGOGNE-FRANCHE-COMTÉ",
+    "sex": "M",
+    "category_age": "SJR",
+    "last_name": "RICHARD",
+    "first_name": "Antoine",
+    "weight_category": "74 Kg",
+    "attempts": {
+      "squat": [
+        {
+          "weight": 167.5,
+          "status": "valid"
+        },
+        {
+          "weight": 180,
+          "status": "valid"
+        },
+        {
+          "weight": 190,
+          "status": "valid"
+        }
+      ],
+      "bench_press": [
+        {
+          "weight": 107.5,
+          "status": "valid"
+        },
+        {
+          "weight": 112.5,
+          "status": "valid"
+        },
+        {
+          "weight": 120,
+          "status": "invalid"
+        }
+      ],
+      "deadlift": [
+        {
+          "weight": 195,
+          "status": "invalid"
+        },
+        {
+          "weight": 212.5,
+          "status": "valid"
+        },
+        {
+          "weight": 200,
+          "status": "pending"
+        }
+      ]
+    },
+    "total": 502.5
+  },
+  {
+    "club": "0587 - TEMPLE GYM",
+    "sex": "F",
+    "category_age": "JR",
+    "last_name": "DAMONGEOT",
+    "first_name": "Auriane",
+    "weight_category": "76 Kg",
+    "attempts": {
+      "squat": [
+        {
+          "weight": 145,
+          "status": "valid"
+        },
+        {
+          "weight": 153,
+          "status": "valid"
+        },
+        {
+          "weight": 160,
+          "status": "valid"
+        }
+      ],
+      "bench_press": [
+        {
+          "weight": 60.5,
+          "status": "valid"
+        },
+        {
+          "weight": 65,
+          "status": "invalid"
+        },
+        {
+          "weight": 65.5,
+          "status": "valid"
+        }
+      ],
+      "deadlift": [
+        {
+          "weight": 145,
+          "status": "valid"
+        },
+        {
+          "weight": 153,
+          "status": "valid"
+        },
+        {
+          "weight": 200,
+          "status": "pending"
+        }
+      ]
+    },
+    "total": 425.5
+  },
+  {
+    "club": "0420 - STADE AUXERROIS",
+    "sex": "M",
+    "category_age": "SJR",
+    "last_name": "GEOFFROY",
+    "first_name": "Ethan",
+    "weight_category": "74 Kg",
+    "attempts": {
+      "squat": [
+        {
+          "weight": 165,
+          "status": "valid"
+        },
+        {
+          "weight": 172.5,
+          "status": "invalid"
+        },
+        {
+          "weight": 175,
+          "status": "valid"
+        }
+      ],
+      "bench_press": [
+        {
+          "weight": 102.5,
+          "status": "invalid"
+        },
+        {
+          "weight": 107.5,
+          "status": "valid"
+        },
+        {
+          "weight": 112.5,
+          "status": "valid"
+        }
+      ],
+      "deadlift": [
+        {
+          "weight": 200,
+          "status": "valid"
+        },
+        {
+          "weight": 215,
+          "status": "invalid"
+        },
+        {
+          "weight": 215,
+          "status": "pending"
+        }
+      ]
+    },
+    "total": 502.5
+  },
+  {
+    "club": "L02 - LIGUE DE FORCE BOURGOGNE-FRANCHE-COMTÉ",
+    "sex": "F",
+    "category_age": "JR",
+    "last_name": "PICHOT",
+    "first_name": "Solenne",
+    "weight_category": "57 Kg",
+    "attempts": {
+      "squat": [
+        {
+          "weight": 125,
+          "status": "valid"
+        },
+        {
+          "weight": 130,
+          "status": "invalid"
+        },
+        {
+          "weight": 130,
+          "status": "invalid"
+        }
+      ],
+      "bench_press": [
+        {
+          "weight": 75,
+          "status": "valid"
+        },
+        {
+          "weight": 80,
+          "status": "invalid"
+        },
+        {
+          "weight": 80,
+          "status": "invalid"
+        }
+      ],
+      "deadlift": [
+        {
+          "weight": 160,
+          "status": "valid"
+        },
+        {
+          "weight": 165,
+          "status": "invalid"
+        },
+        {
+          "weight": 220,
+          "status": "pending"
+        }
+      ]
+    },
+    "total": 420
+  },
+  {
+    "club": "0420 - STADE AUXERROIS",
+    "sex": "F",
+    "category_age": "JR",
+    "last_name": "SANCHEZ",
+    "first_name": "Chloé",
+    "weight_category": "57 Kg",
+    "attempts": {
+      "squat": [
+        {
+          "weight": 105,
+          "status": "valid"
+        },
+        {
+          "weight": 112.5,
+          "status": "valid"
+        },
+        {
+          "weight": 117.5,
+          "status": "invalid"
+        }
+      ],
+      "bench_press": [
+        {
+          "weight": 50,
+          "status": "valid"
+        },
+        {
+          "weight": 55,
+          "status": "valid"
+        },
+        {
+          "weight": 60,
+          "status": "invalid"
+        }
+      ],
+      "deadlift": [
+        {
+          "weight": 125,
+          "status": "valid"
+        },
+        {
+          "weight": 132.5,
+          "status": "valid"
+        },
+        {
+          "weight": 230,
+          "status": "pending"
+        }
+      ]
+    },
+    "total": 397.5
+  },
+  {
+    "club": "0587 - TEMPLE GYM",
+    "sex": "F",
+    "category_age": "JR",
+    "last_name": "DEMORD",
+    "first_name": "Laurene",
+    "weight_category": "57 Kg",
+    "attempts": {
+      "squat": [
+        {
+          "weight": 97.5,
+          "status": "valid"
+        },
+        {
+          "weight": 102.5,
+          "status": "valid"
+        },
+        {
+          "weight": 107.5,
+          "status": "invalid"
+        }
+      ],
+      "bench_press": [
+        {
+          "weight": 50,
+          "status": "valid"
+        },
+        {
+          "weight": 55,
+          "status": "valid"
+        },
+        {
+          "weight": 57.5,
+          "status": "invalid"
+        }
+      ],
+      "deadlift": [
+        {
+          "weight": 117.5,
+          "status": "valid"
+        },
+        {
+          "weight": 125,
+          "status": "valid"
+        },
+        {
+          "weight": 240,
+          "status": "pending"
+        }
+      ]
+    },
+    "total": 397.5
+  },
+  {
+    "club": "0587 - TEMPLE GYM",
+    "sex": "M",
+    "category_age": "JR",
+    "last_name": "MEUNIER",
+    "first_name": "Hugo",
+    "weight_category": "74 Kg",
+    "attempts": {
+      "squat": [
+        {
+          "weight": 185,
+          "status": "valid"
+        },
+        {
+          "weight": 195,
+          "status": "valid"
+        },
+        {
+          "weight": 200,
+          "status": "valid"
+        }
+      ],
+      "bench_press": [
+        {
+          "weight": 140,
+          "status": "valid"
+        },
+        {
+          "weight": 145,
+          "status": "valid"
+        },
+        {
+          "weight": 148,
+          "status": "invalid"
+        }
+      ],
+      "deadlift": [
+        {
+          "weight": 230,
+          "status": "invalid"
+        },
+        {
+          "weight": 245,
+          "status": "invalid"
+        },
+        {
+          "weight": 120,
+          "status": "pending"
+        }
+      ]
+    },
+    "total": 465
+  },
+  {
+    "club": "0420 - STADE AUXERROIS",
+    "sex": "M",
+    "category_age": "JR",
+    "last_name": "LEVILLAIN",
+    "first_name": "Theo",
+    "weight_category": "93 Kg",
+    "attempts": {
+      "squat": [
+        {
+          "weight": 210,
+          "status": "valid"
+        },
+        {
+          "weight": 222.5,
+          "status": "valid"
+        },
+        {
+          "weight": 230,
+          "status": "valid"
+        }
+      ],
+      "bench_press": [
+        {
+          "weight": 130,
+          "status": "valid"
+        },
+        {
+          "weight": 135,
+          "status": "valid"
+        },
+        {
+          "weight": 140,
+          "status": "valid"
+        }
+      ],
+      "deadlift": [
+        {
+          "weight": 250,
+          "status": "valid"
+        },
+        {
+          "weight": 276,
+          "status": "valid"
+        },
+        {
+          "weight": 150,
+          "status": "pending"
+        }
+      ]
+    },
+    "total": 520
+  },
+  {
+    "club": "0294 - HC AVALLON MFAC",
+    "sex": "M",
+    "category_age": "JR",
+    "last_name": "OLIVIER",
+    "first_name": "Ismaël",
+    "weight_category": "93 Kg",
+    "attempts": {
+      "squat": [
+        {
+          "weight": 195,
+          "status": "valid"
+        },
+        {
+          "weight": 207.5,
+          "status": "valid"
+        },
+        {
+          "weight": 215,
+          "status": "valid"
+        }
+      ],
+      "bench_press": [
+        {
+          "weight": 145,
+          "status": "valid"
+        },
+        {
+          "weight": 155,
+          "status": "invalid"
+        },
+        {
+          "weight": 155,
+          "status": "invalid"
+        }
+      ],
+      "deadlift": [
+        {
+          "weight": 200,
+          "status": "invalid"
+        },
+        {
+          "weight": 215,
+          "status": "valid"
+        },
+        {
+          "weight": 160,
+          "status": "pending"
+        }
+      ]
+    },
+    "total": 520
+  },
+  {
+    "club": "0024 - AS FOURCHAMBAULT",
+    "sex": "M",
+    "category_age": "JR",
+    "last_name": "BRICAGE",
+    "first_name": "Gabriel",
+    "weight_category": "93 Kg",
+    "attempts": {
+      "squat": [
+        {
+          "weight": 187.5,
+          "status": "valid"
+        },
+        {
+          "weight": 200,
+          "status": "valid"
+        },
+        {
+          "weight": 205,
+          "status": "invalid"
+        }
+      ],
+      "bench_press": [
+        {
+          "weight": 107.5,
+          "status": "valid"
+        },
+        {
+          "weight": 112.5,
+          "status": "invalid"
+        },
+        {
+          "weight": 112.5,
+          "status": "invalid"
+        }
+      ],
+      "deadlift": [
+        {
+          "weight": 227.5,
+          "status": "valid"
+        },
+        {
+          "weight": 250,
+          "status": "invalid"
+        },
+        {
+          "weight": 245,
+          "status": "pending"
+        }
+      ]
+    },
+    "total": 552.5
+  },
+  {
+    "club": "0420 - STADE AUXERROIS",
+    "sex": "M",
+    "category_age": "JR",
+    "last_name": "BERAUD",
+    "first_name": "Adrien",
+    "weight_category": "93 Kg",
+    "attempts": {
+      "squat": [
+        {
+          "weight": 162.5,
+          "status": "valid"
+        },
+        {
+          "weight": 165,
+          "status": "valid"
+        },
+        {
+          "weight": 182.5,
+          "status": "valid"
+        }
+      ],
+      "bench_press": [
+        {
+          "weight": 95,
+          "status": "valid"
+        },
+        {
+          "weight": 105,
+          "status": "valid"
+        },
+        {
+          "weight": 115,
+          "status": "invalid"
+        }
+      ],
+      "deadlift": [
+        {
+          "weight": 210,
+          "status": "valid"
+        },
+        {
+          "weight": 230,
+          "status": "valid"
+        },
+        {
+          "weight": 145,
+          "status": "pending"
+        }
+      ]
+    },
+    "total": 432.5
+  },
+  {
+    "club": "0587 - TEMPLE GYM",
+    "sex": "M",
+    "category_age": "JR",
+    "last_name": "GÉRARD",
+    "first_name": "Mathieu",
+    "weight_category": "93 Kg",
+    "attempts": {
+      "squat": [
+        {
+          "weight": 165,
+          "status": "valid"
+        },
+        {
+          "weight": 175,
+          "status": "valid"
+        },
+        {
+          "weight": 185,
+          "status": "valid"
+        }
+      ],
+      "bench_press": [
+        {
+          "weight": 107.5,
+          "status": "invalid"
+        },
+        {
+          "weight": 107.5,
+          "status": "valid"
+        },
+        {
+          "weight": 112.5,
+          "status": "invalid"
+        }
+      ],
+      "deadlift": [
+        {
+          "weight": 200,
+          "status": "valid"
+        },
+        {
+          "weight": 212.5,
+          "status": "valid"
+        },
+        {
+          "weight": 132,
+          "status": "pending"
+        }
+      ]
+    },
+    "total": 424.5
+  },
+  {
+    "club": "0460 - USO DIJON",
+    "sex": "M",
+    "category_age": "JR",
+    "last_name": "TRIOLET",
+    "first_name": "Maxence",
+    "weight_category": "105 Kg",
+    "attempts": {
+      "squat": [
+        {
+          "weight": 200,
+          "status": "valid"
+        },
+        {
+          "weight": 210,
+          "status": "valid"
+        },
+        {
+          "weight": 220,
+          "status": "valid"
+        }
+      ],
+      "bench_press": [
+        {
+          "weight": 135,
+          "status": "valid"
+        },
+        {
+          "weight": 142.5,
+          "status": "valid"
+        },
+        {
+          "weight": 150,
+          "status": "valid"
+        }
+      ],
+      "deadlift": [
+        {
+          "weight": 215,
+          "status": "valid"
+        },
+        {
+          "weight": 230,
+          "status": "valid"
+        },
+        {
+          "weight": 125,
+          "status": "pending"
+        }
+      ]
+    },
+    "total": 495
+  }
+]
