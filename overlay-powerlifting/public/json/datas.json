@@ -2,6 +2,59 @@
   {
     "club": "L02 - LIGUE DE FORCE BOURGOGNE-FRANCHE-COMTÉ",
     "sex": "M",
+    "category_age": "JR",
+    "last_name": "DEMOULIN",
+    "first_name": "Alexandre",
+    "weight_category": "66 Kg",
+    "attempts": {
+      "squat": [
+        {
+          "weight": 145,
+          "status": "valid"
+        },
+        {
+          "weight": 150,
+          "status": "valid"
+        },
+        {
+          "weight": 155,
+          "status": "valid"
+        }
+      ],
+      "bench_press": [
+        {
+          "weight": 132.5,
+          "status": "valid"
+        },
+        {
+          "weight": 135,
+          "status": "invalid"
+        },
+        {
+          "weight": 135,
+          "status": "invalid"
+        }
+      ],
+      "deadlift": [
+        {
+          "weight": 175,
+          "status": "valid"
+        },
+        {
+          "weight": 182.5,
+          "status": "valid"
+        },
+        {
+          "weight": 145,
+          "status": "pending"
+        }
+      ]
+    },
+    "total": 432.5
+  },
+  {
+    "club": "L02 - LIGUE DE FORCE BOURGOGNE-FRANCHE-COMTÉ",
+    "sex": "M",
     "category_age": "SJR",
     "last_name": "PASTEUR",
     "first_name": "Eliott",
@@ -156,7 +209,60 @@
         }
       ]
     },
-    "total": 515
+    "total": 502.5
+  },
+  {
+    "club": "0587 - TEMPLE GYM",
+    "sex": "F",
+    "category_age": "JR",
+    "last_name": "DAMONGEOT",
+    "first_name": "Auriane",
+    "weight_category": "76 Kg",
+    "attempts": {
+      "squat": [
+        {
+          "weight": 145,
+          "status": "valid"
+        },
+        {
+          "weight": 153,
+          "status": "valid"
+        },
+        {
+          "weight": 160,
+          "status": "valid"
+        }
+      ],
+      "bench_press": [
+        {
+          "weight": 60.5,
+          "status": "valid"
+        },
+        {
+          "weight": 65,
+          "status": "invalid"
+        },
+        {
+          "weight": 65.5,
+          "status": "valid"
+        }
+      ],
+      "deadlift": [
+        {
+          "weight": 145,
+          "status": "valid"
+        },
+        {
+          "weight": 153,
+          "status": "valid"
+        },
+        {
+          "weight": 200,
+          "status": "pending"
+        }
+      ]
+    },
+    "total": 425.5
   },
   {
     "club": "0420 - STADE AUXERROIS",
@@ -209,7 +315,7 @@
         }
       ]
     },
-    "total": 487.5
+    "total": 502.5
   },
   {
     "club": "L02 - LIGUE DE FORCE BOURGOGNE-FRANCHE-COMTÉ",
@@ -262,7 +368,7 @@
         }
       ]
     },
-    "total": 360
+    "total": 420
   },
   {
     "club": "0420 - STADE AUXERROIS",
@@ -315,7 +421,7 @@
         }
       ]
     },
-    "total": 300
+    "total": 397.5
   },
   {
     "club": "0587 - TEMPLE GYM",
@@ -368,113 +474,7 @@
         }
       ]
     },
-    "total": 282.5
-  },
-  {
-    "club": "0587 - TEMPLE GYM",
-    "sex": "F",
-    "category_age": "JR",
-    "last_name": "DAMONGEOT",
-    "first_name": "Auriane",
-    "weight_category": "76 Kg",
-    "attempts": {
-      "squat": [
-        {
-          "weight": 145,
-          "status": "valid"
-        },
-        {
-          "weight": 153,
-          "status": "valid"
-        },
-        {
-          "weight": 160,
-          "status": "valid"
-        }
-      ],
-      "bench_press": [
-        {
-          "weight": 60.5,
-          "status": "valid"
-        },
-        {
-          "weight": 65,
-          "status": "invalid"
-        },
-        {
-          "weight": 65.5,
-          "status": "valid"
-        }
-      ],
-      "deadlift": [
-        {
-          "weight": 145,
-          "status": "valid"
-        },
-        {
-          "weight": 153,
-          "status": "valid"
-        },
-        {
-          "weight": null,
-          "status": "pending"
-        }
-      ]
-    },
-    "total": 378.5
-  },
-  {
-    "club": "L02 - LIGUE DE FORCE BOURGOGNE-FRANCHE-COMTÉ",
-    "sex": "M",
-    "category_age": "JR",
-    "last_name": "DEMOULIN",
-    "first_name": "Alexandre",
-    "weight_category": "66 Kg",
-    "attempts": {
-      "squat": [
-        {
-          "weight": 145,
-          "status": "valid"
-        },
-        {
-          "weight": 150,
-          "status": "valid"
-        },
-        {
-          "weight": 155,
-          "status": "valid"
-        }
-      ],
-      "bench_press": [
-        {
-          "weight": 132.5,
-          "status": "valid"
-        },
-        {
-          "weight": 135,
-          "status": "invalid"
-        },
-        {
-          "weight": 135,
-          "status": "invalid"
-        }
-      ],
-      "deadlift": [
-        {
-          "weight": 175,
-          "status": "valid"
-        },
-        {
-          "weight": 182.5,
-          "status": "valid"
-        },
-        {
-          "weight": null,
-          "status": "pending"
-        }
-      ]
-    },
-    "total": 470
+    "total": 397.5
   },
   {
     "club": "0587 - TEMPLE GYM",
@@ -522,12 +522,12 @@
           "status": "invalid"
         },
         {
-          "weight": null,
+          "weight": 120,
           "status": "pending"
         }
       ]
     },
-    "total": 345
+    "total": 465
   },
   {
     "club": "0420 - STADE AUXERROIS",
@@ -575,12 +575,12 @@
           "status": "valid"
         },
         {
-          "weight": null,
+          "weight": 150,
           "status": "pending"
         }
       ]
     },
-    "total": 646
+    "total": 520
   },
   {
     "club": "0294 - HC AVALLON MFAC",
@@ -628,12 +628,12 @@
           "status": "valid"
         },
         {
-          "weight": null,
+          "weight": 160,
           "status": "pending"
         }
       ]
     },
-    "total": 575
+    "total": 520
   },
   {
     "club": "0024 - AS FOURCHAMBAULT",
@@ -681,12 +681,12 @@
           "status": "invalid"
         },
         {
-          "weight": null,
+          "weight": 245,
           "status": "pending"
         }
       ]
     },
-    "total": 535
+    "total": 552.5
   },
   {
     "club": "0420 - STADE AUXERROIS",
@@ -734,12 +734,12 @@
           "status": "valid"
         },
         {
-          "weight": null,
+          "weight": 145,
           "status": "pending"
         }
       ]
     },
-    "total": 517.5
+    "total": 432.5
   },
   {
     "club": "0587 - TEMPLE GYM",
@@ -787,12 +787,12 @@
           "status": "valid"
         },
         {
-          "weight": null,
+          "weight": 132,
           "status": "pending"
         }
       ]
     },
-    "total": 505
+    "total": 424.5
   },
   {
     "club": "0460 - USO DIJON",
@@ -840,11 +840,11 @@
           "status": "valid"
         },
         {
-          "weight": null,
+          "weight": 125,
           "status": "pending"
         }
       ]
     },
-    "total": 600
+    "total": 495
   }
 ]

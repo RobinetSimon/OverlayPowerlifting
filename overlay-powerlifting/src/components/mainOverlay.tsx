@@ -10,7 +10,7 @@ const AttemptBox = ({ weight, status }: { weight: number, status: string }) => {
     return 'bg-gray-300';
   };
   return (
-    <div className={`rounded px-2 py-1 text-white font-bold text-sm ${getColor()}`}>
+    <div className={`rounded px-2 py-1 text-black font-bold text-sm ${getColor()}`}>
       {weight}
     </div>
   );
@@ -53,7 +53,7 @@ export default function PowerliftingOverlay({
     <div className="fixed bottom-4 left-4 z-50">
       <button
         onClick={() => setVisible(!visible)}
-        className="mb-2 bg-blue-700 text-white px-4 py-1 rounded shadow"
+        className="mb-2 bg-blue-700 text-black px-4 py-1 rounded shadow"
       >
         {visible ? 'Hide Overlay' : 'Show Overlay'}
       </button>
@@ -66,7 +66,7 @@ export default function PowerliftingOverlay({
             exit={{ scaleX: 0 }}
             transition={{ duration: 1.2, ease: 'easeInOut' }}
             style={{ transformOrigin: 'left' }}
-            className="bg-blue-900/35 text-white rounded-xl p-4 shadow-xl w-[600px] origin-left backdrop-blur-sm"
+            className="bg-blue-900/35 text-black rounded-xl p-4 shadow-xl w-[600px] origin-left backdrop-blur-sm"
           >
             <div className="flex justify-between text-sm">
               <div className="font-bold">{category}</div>
@@ -80,12 +80,16 @@ export default function PowerliftingOverlay({
                 <div className="text-sm">{lifter.country}</div>
               </div>
               <div>
-                <div className="text-white text-lg font-bold">{lifter.firstName}</div>
-                <div className="text-white text-xl font-bold">{lifter.name}</div>
+                <div className="text-black text-lg font-bold">{lifter.firstName}</div>
+                <div className="text-black text-xl font-bold">{lifter.name}</div>
               </div>
               <div className="flex gap-2 ml-auto">
                 {attempts.map((a, i) => (
-                  <AttemptBox key={i} weight={a.weight} status={a.status} />
+                  a.weight !== null && a.weight !== undefined ? (
+                    <AttemptBox key={i} weight={a.weight} status={a.status} />
+                  ) : (
+                    <div key={i} className="w-[40px] h-[32px]" />
+                  )
                 ))}
                 <div className="bg-yellow-500 text-black font-bold px-2 py-1 rounded">
                   {total.toFixed(1)}
