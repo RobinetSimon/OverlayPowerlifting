@@ -10,9 +10,15 @@ export default function Controls() {
   const [selectedLift, setSelectedLift] = useState<'squat' | 'bench_press' | 'deadlift'>('squat');
   const channelRef = useRef<BroadcastChannel | null>(null);
 
+  // Nouveaux états
+  const [jsonPath, setJsonPath] = useState('/json/datas.json');
+  const [excelPath, setExcelPath] = useState('');
+  const [intervalSec, setIntervalSec] = useState(30);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
     const fetchData = async () => {
-      const res = await fetch('/json/datas.json');
+      const res = await fetch(jsonPath);
       const json = await res.json();
       setAthletes(json);
     };
@@ -22,7 +28,7 @@ export default function Controls() {
     channelRef.current = channel;
 
     return () => channel.close();
-  }, []);
+  }, [jsonPath]);
 
   const sendToOverlay = () => {
     const athlete = athletes[currentIndex];
@@ -85,6 +91,10 @@ export default function Controls() {
     sendToOverlay();
   }, [currentIndex, selectedLift, athletes]);
 
+  const launchPythonScript = () => {
+
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 py-10 px-6">
       <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-2xl p-6 space-y-6">
@@ -113,6 +123,42 @@ export default function Controls() {
           </p>
         </section>
 
+        <section className="pt-6 border-t space-y-4">
+          <h2 className="text-lg font-semibold text-gray-800">Paramètres de chargement de l'overlay</h2>
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">Chemin vers le JSON</label>
+            <input
+              type="text"
+              value={jsonPath}
+              onChange={(e) => setJsonPath(e.target.value)}
+              className="w-full p-2 border rounded"
+            />
+
+            <label className="block text-sm font-medium text-gray-700">Chemin vers le fichier Excel</label>
+            <input
+              type="text"
+              value={excelPath}
+              onChange={(e) => setExcelPath(e.target.value)}
+              className="w-full p-2 border rounded"
+            />
+
+            <label className="block text-sm font-medium text-gray-700">Intervalle (en secondes)</label>
+            <input
+              type="number"
+              min={5}
+              value={intervalSec}
+              onChange={(e) => setIntervalSec(parseInt(e.target.value))}
+              className="w-full p-2 border rounded"
+            />
+
+            <button
+              onClick={launchPythonScript}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-5 py-2 mt-2 rounded-lg shadow"
+            >
+              Lancer le script de chargement
+            </button>
+          </div>
+        </section>
       </div>
     </div>
   );
