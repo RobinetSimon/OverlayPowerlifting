@@ -1,16 +1,16 @@
 'use client';
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useLayoutEffect, useRef } from 'react';
+import gsap from 'gsap';
 
 const AttemptBox = ({ weight, status }: { weight: number; status: string }) => {
   const getColor = () => {
     if (status === 'good') return 'bg-green-500';
-    if (status === 'fail') return 'bg-red-500';
+    if (status === 'fail') return 'bg-red-600';
     return 'bg-gray-300';
   };
 
   return (
-    <div className={`rounded px-2 py-1 text-black font-bold text-sm ${getColor()}`}>
+    <div className={`card-box ${getColor()} text-white font-bold px-2 text-sm flex items-center justify-center min-w-[40px] h-[18px]`}>
       {weight}
     </div>
   );
@@ -24,6 +24,7 @@ interface Attempt {
 interface LifterInfo {
   name: string;
   firstName: string;
+  category?: string;
 }
 
 interface PowerliftingOverlayProps {
@@ -34,70 +35,113 @@ interface PowerliftingOverlayProps {
   attempts: Attempt[];
   total: number;
   competition: string;
+  currentMovement: string;
   visible: boolean;
 }
 
 export default function PowerliftingOverlay({
   category,
-  rankInfo,
-  timer,
   lifter,
   attempts,
   total,
   competition,
+  currentMovement,
   visible,
 }: PowerliftingOverlayProps) {
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (visible && overlayRef.current) {
+      const ctx = gsap.context(() => {
+        gsap.from('.row-1 .card-box', {
+          x: -80,
+          opacity: 0,
+          duration: 1.1,
+          ease: 'power3.out',
+        });
+        gsap.from('.row-2 .card-box', {
+          x: -80,
+          opacity: 0,
+          duration: 1.1,
+          delay: 0.3,
+          ease: 'power3.out',
+        });
+        gsap.from('.row-3 .card-box', {
+          x: -80,
+          opacity: 0,
+          duration: 1.1,
+          delay: 0.6,
+          ease: 'power3.out',
+        });
+      }, overlayRef);
+      return () => ctx.revert();
+    }
+  }, [visible]);
+
+  if (!visible) return null;
+
+  const formatMovement = (movement: string) => {
+    switch (movement) {
+      case 'squat':
+        return 'Squat';
+      case 'bench_press':
+        return 'Bench';
+      case 'deadlift':
+        return 'Deadlift';
+      default:
+        return movement;
+    }
+  };
+
   return (
-    <AnimatePresence>
-      {visible && (
-        <motion.div
-          initial={{ scaleX: 0 }}
-          animate={{ scaleX: 1 }}
-          exit={{ scaleX: 0 }}
-          transition={{ duration: 1.2, ease: 'easeInOut' }}
-          style={{ transformOrigin: 'left' }}
-          className="bg-blue-900/35 text-black rounded-xl p-4 shadow-xl w-[600px] origin-left backdrop-blur-sm fixed bottom-4 left-4 z-50"
-        >
-          <div className="flex justify-between text-sm">
-            <div className="font-bold">{category}</div>
-            <div>{rankInfo}</div>
-            <div className="bg-yellow-400 text-black font-bold px-2 rounded">{timer}</div>
+    <div ref={overlayRef} className="fixed bottom-4 left-4 z-50 flex flex-col gap-1">
+      {/* Ligne 1 - catégorie et mouvement */}
+      <div className="row-1 flex h-8 text-white text-sm font-bold gap-1">
+        {/* Bloc gauche : catégorie */}
+        <div className="relative px-3 flex items-center bg-blue-900/60 clip-both-left">
+          {category}
+        </div>
+
+        {/* Bloc droit : currentMovement */}
+        <div className="relative px-3 flex-1 flex items-center bg-blue-900/60 clip-both-right">
+          {formatMovement(currentMovement)}
+        </div>
+      </div>
+
+
+
+
+      {/* Ligne 2 - nom, prénom, essais, total */}
+      <div className="relative row-2">
+        <div className="card-bg bg-blue-900/60 absolute inset-0 -z-10" />
+        <div className="flex gap-1 p-0.5 items-center">
+          <div className="text-white font-bold text-lg ml-1">
+            {lifter.firstName} {lifter.name}
           </div>
 
-          <div className="mt-2 flex items-center gap-4">
-            <div>
-              <div className="text-black text-lg font-bold">{lifter.firstName}</div>
-              <div className="text-black text-xl font-bold">{lifter.name}</div>
-            </div>
-            <div className="flex gap-2 ml-auto">
-              {attempts.map((a, i) =>
-                a.weight != null ? (
-                  <AttemptBox key={i} weight={a.weight} status={a.status} />
-                ) : (
-                  <div key={i} className="w-[40px] h-[32px]" />
-                )
-              )}
-              <div className="bg-yellow-500 text-black font-bold px-2 py-1 rounded">
-                {total.toFixed(1)}
-              </div>
-            </div>
-          </div>
+          {attempts.map((a, i) =>
+            a.weight != null ? (
+              <AttemptBox key={i} weight={a.weight} status={a.status} />
+            ) : (
+              <div key={i} className="card-box bg-gray-600 w-[40px] h-[18px]" />
+            )
+          )}
 
-          <div className="mt-2 flex justify-between items-center">
-            <img
-              src="/images/ffforce.png"
-              alt="Logo FFFORCE"
-              className="h-10 opacity-80 grayscale hover:grayscale-0 transition-all duration-300"
-            />
-            <div className="text-xs text-gray-300">{competition}</div>
-            <img
-              src="/images/ffforce_bfc.png"
-              alt="Logo BFC"
-              className="h-10 opacity-80 grayscale hover:grayscale-0 transition-all duration-300"
-            />
+          <div className="card-box bg-yellow-400 text-black font-bold px-2 text-md h-[18px] flex items-center justify-center">
+            {total.toFixed(1)}
           </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Ligne 3 - compétition */}
+      <div className="relative row-3">
+        <div className="card-bg bg-blue-900/60 absolute inset-0 -z-10" />
+        <div className="flex items-center p-0.5">
+          <div className="card-box bg-blue-900 text-xs text-gray-300 px-2 py-0.5">
+            {competition}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

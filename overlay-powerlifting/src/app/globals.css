@@ -26,3 +26,30 @@ body {
   margin: 0;
   height: 100vh; /* s’assurer que ça couvre toute la hauteur */
 }
+
+.card-box {
+  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  border-radius: 4px;
+}
+
+.card-bg {
+  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  border-radius: 4px;
+}
+
+.clip-both-left {
+  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+}
+
+.clip-both-right {
+  clip-path: polygon(
+    0 0,                  /* coin haut gauche */
+    calc(100% - 8px) 0,   /* coin haut droit biseauté */
+    calc(100% - 8px) 100%,/* coin bas droit biseauté */
+    0 100%                /* coin bas gauche */
+  );
+}
+
+
+
+

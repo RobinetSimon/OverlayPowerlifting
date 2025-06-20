@@ -52,6 +52,7 @@ export default function Controls() {
       })),
       total: athlete.total,
       competition: 'CHAMPIONNAT FA 2025',
+      currentMovement: selectedLift, // Ajout du mouvement actuel
     };
 
     channelRef.current?.postMessage(payload);
@@ -78,6 +79,7 @@ export default function Controls() {
       })),
       total: a.total,
       competition: 'CHAMPIONNAT FA 2025',
+      currentMovement: selectedLift, // Ajout du mouvement actuel
     };
 
     const channel = new BroadcastChannel('overlay-channel');
@@ -107,7 +109,6 @@ export default function Controls() {
         alert(`Erreur API : ${error.error || response.statusText}`);
         return false;
       }
-      // La réponse contient maintenant directement le JSON des athlètes
       const json = await response.json();
       setAthletes(json);
 
@@ -118,8 +119,6 @@ export default function Controls() {
     }
   };
 
-
-  // Lance le script et démarre l'intervalle
   const launchPythonScript = async () => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -135,7 +134,7 @@ export default function Controls() {
 
     setProgress(0);
     const totalDuration = intervalSec * 1000;
-    const updateRate = 100; // ms
+    const updateRate = 100;
     let elapsed = 0;
 
     progressIntervalRef.current = setInterval(() => {
@@ -152,8 +151,6 @@ export default function Controls() {
     }, totalDuration);
   };
 
-
-  // Arrête l'exécution répétée
   const stopScript = () => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -166,7 +163,6 @@ export default function Controls() {
     setProgress(0);
     alert("Exécution répétée arrêtée.");
   };
-
 
   return (
     <div className="min-h-screen bg-gray-100 py-10 px-6">
@@ -243,7 +239,6 @@ export default function Controls() {
                 style={{ width: `${progress}%` }}
               ></div>
             </div>
-
           </div>
 
           <div className="mt-10 flex justify-center items-center gap-8">
