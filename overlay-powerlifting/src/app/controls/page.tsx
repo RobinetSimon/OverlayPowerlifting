@@ -13,8 +13,8 @@ export default function Controls() {
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Nouveaux états
-  const [jsonPath, setJsonPath] = useState('C:\Users\simon\OneDrive\Bureau\StreamBFC\ProjetOverlay\OverlayPowerlifting\overlay-powerlifting\public\json\datas.json');
-  const [excelPath, setExcelPath] = useState('C:\Users\simon\OneDrive\Bureau\StreamBFC\ProjetOverlay\OverlayPowerlifting\dataset\Régional FA JEUNES COMP.xlsm');
+  const [jsonPath, setJsonPath] = useState('C:/Users/simon/OneDrive/Bureau/StreamBFC/ProjetOverlay/OverlayPowerlifting/overlay-powerlifting/public/json/datas.json');
+  const [excelPath, setExcelPath] = useState('C:/Users/simon/OneDrive/Bureau/StreamBFC/ProjetOverlay/OverlayPowerlifting/dataset/Régional FA JEUNES COMP.xlsm');
   const [intervalSec, setIntervalSec] = useState(30);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
