@@ -182,7 +182,7 @@ export default function Controls() {
         </section>
 
         <section className="pt-6 border-t space-y-4">
-          <h2 className="text-lg font-semibold text-gray-800">Paramètres de chargement de l&aposoverlay</h2>
+          <h2 className="text-lg font-semibold text-gray-800">Paramètres de chargement de l&apos;overlay</h2>
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">Chemin vers le JSON</label>
             <input
