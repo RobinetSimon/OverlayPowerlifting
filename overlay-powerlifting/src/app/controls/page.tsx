@@ -19,8 +19,11 @@ export default function Controls() {
   const [excelPath, setExcelPath] = useState('C:/Users/simon/OneDrive/Bureau/StreamBFC/ProjetOverlay/OverlayPowerlifting/dataset/Régional FA JEUNES COMP.xlsm');
   const [intervalSec, setIntervalSec] = useState(30);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // NOUVEAU : état pour le nom de la compétition
+  const [competitionName, setCompetitionName] = useState('NOM COMPETITION');
 
-    // Effet pour établir la connexion WebSocket au chargement de la page
+  // Effet pour établir la connexion WebSocket au chargement de la page
   useEffect(() => {
     const ws = new WebSocket('ws://localhost:8080');
     ws.onopen = () => console.log("Panneau de contrôle connecté au serveur WebSocket !");
@@ -63,7 +66,7 @@ export default function Controls() {
         status: at.status === 'valid' ? 'good' : at.status === 'invalid' ? 'fail' : 'pending',
       })),
       total: a.total,
-      competition: 'CHAMPIONNAT FA 2025',
+      competition: competitionName, // MODIFIÉ : utilisation du nouvel état
       currentMovement: selectedLift,
     };
 
@@ -194,6 +197,15 @@ export default function Controls() {
               type="text"
               value={excelPath}
               onChange={(e) => setExcelPath(e.target.value)}
+              className="w-full p-2 border rounded"
+            />
+
+            {/* NOUVEAU : champ de saisie pour le nom de la compétition */}
+            <label className="block text-sm font-medium text-gray-700">Nom de la compétition</label>
+            <input
+              type="text"
+              value={competitionName}
+              onChange={(e) => setCompetitionName(e.target.value)}
               className="w-full p-2 border rounded"
             />
 
