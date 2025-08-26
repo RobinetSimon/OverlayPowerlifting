@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: transparent; /* fond transparent */
+  --background: transparent; 
   --foreground: #171717;
 }
 
@@ -14,7 +14,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: transparent; /* aussi transparent en mode sombre */
+    --background: transparent; 
     --foreground: #ededed;
   }
 }

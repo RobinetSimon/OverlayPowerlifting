@@ -1,3 +1,4 @@
+// Fichier: overlaypage.tsx
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -10,22 +11,47 @@ export default function OverlayPage() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const channel = new BroadcastChannel('overlay-channel');
+    const connectWebSocket = () => {
+      const ws = new WebSocket('ws://localhost:8080');
 
-    channel.onmessage = (event) => {
-      const { type, data } = event.data;
+      ws.onopen = () => {
+        console.log('Overlay connecté au serveur WebSocket.');
+      };
 
-      if (type === 'UPDATE_OVERLAY') {
-        setAthlete(data);
-        setVisible(true);
+      ws.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        const { type, data } = message;
 
-        setTimeout(() => {
-          setVisible(false);
-        }, 10000); // masque après 10 secondes
-      }
+        if (type === 'UPDATE_OVERLAY') {
+          setAthlete(data);
+          setVisible(true);
+
+          setTimeout(() => {
+            setVisible(false);
+          }, 10000); // masque après 10 secondes
+        }
+      };
+
+      ws.onclose = () => {
+        console.log('Overlay déconnecté. Tentative de reconnexion dans 3 secondes...');
+        setTimeout(connectWebSocket, 3000); // Reconnexion auto
+      };
+
+      ws.onerror = (error) => {
+        console.error('Erreur WebSocket Overlay:', error);
+        ws.close(); // Provoque l'appel à onclose pour la reconnexion
+      };
+
+      // Fonction de nettoyage pour arrêter la reconnexion si on quitte la page
+      return () => {
+        ws.onclose = null; 
+        ws.close();
+      };
     };
 
-    return () => channel.close();
+    const cleanup = connectWebSocket();
+    return cleanup;
+    
   }, []);
 
   return (

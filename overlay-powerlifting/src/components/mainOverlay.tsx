@@ -98,12 +98,12 @@ export default function PowerliftingOverlay({
       {/* Ligne 1 - catégorie et mouvement */}
       <div className="row-1 flex h-8 text-white text-sm font-bold gap-1">
         {/* Bloc gauche : catégorie */}
-        <div className="relative px-3 flex items-center bg-blue-900/60 clip-both-left">
+        <div className="relative px-3 flex items-center bg-blue-900 clip-both-left">
           {category}
         </div>
 
         {/* Bloc droit : currentMovement */}
-        <div className="relative px-3 flex-1 flex items-center bg-blue-900/60 clip-both-right">
+        <div className="relative px-3 flex-1 flex items-center bg-blue-900 clip-both-right">
           {formatMovement(currentMovement)}
         </div>
       </div>
@@ -113,7 +113,7 @@ export default function PowerliftingOverlay({
 
       {/* Ligne 2 - nom, prénom, essais, total */}
       <div className="relative row-2">
-        <div className="card-bg bg-blue-900/60 absolute inset-0 -z-10" />
+        <div className="card-bg bg-blue-900 absolute inset-0 -z-10" />
         <div className="flex gap-1 p-0.5 items-center">
           <div className="text-white font-bold text-lg ml-1">
             {lifter.firstName} {lifter.name}
@@ -135,7 +135,7 @@ export default function PowerliftingOverlay({
 
       {/* Ligne 3 - compétition */}
       <div className="relative row-3">
-        <div className="card-bg bg-blue-900/60 absolute inset-0 -z-10" />
+        <div className="card-bg bg-blue-900 absolute inset-0 -z-10" />
         <div className="flex items-center p-0.5">
           <div className="card-box bg-blue-900 text-xs text-gray-300 px-2 py-0.5">
             {competition}
