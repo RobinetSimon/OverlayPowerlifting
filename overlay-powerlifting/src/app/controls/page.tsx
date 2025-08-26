@@ -8,7 +8,9 @@ export default function Controls() {
   const [athletes, setAthletes] = useState<AthleteRaw[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedLift, setSelectedLift] = useState<'squat' | 'bench_press' | 'deadlift'>('squat');
-  const channelRef = useRef<BroadcastChannel | null>(null);
+
+  // Référence pour garder la connexion WebSocket persistante
+  const wsRef = useRef<WebSocket | null>(null);
   const [progress, setProgress] = useState(0);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -18,6 +20,19 @@ export default function Controls() {
   const [intervalSec, setIntervalSec] = useState(30);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+    // Effet pour établir la connexion WebSocket au chargement de la page
+  useEffect(() => {
+    const ws = new WebSocket('ws://localhost:8080');
+    ws.onopen = () => console.log("Panneau de contrôle connecté au serveur WebSocket !");
+    ws.onclose = () => console.log("Panneau de contrôle déconnecté.");
+    wsRef.current = ws;
+
+    // On ferme la connexion quand le composant est "démonté" (changement de page, etc.)
+    return () => {
+      ws.close();
+    };
+  }, []); // Le tableau vide est crucial pour n'exécuter cet effet qu'une seule fois
+
   useEffect(() => {
     const fetchData = async () => {
       const res = await fetch(jsonPath);
@@ -25,39 +40,10 @@ export default function Controls() {
       setAthletes(json);
     };
     fetchData();
-
-    const channel = new BroadcastChannel('overlay');
-    channelRef.current = channel;
-
-    return () => channel.close();
   }, [jsonPath]);
 
-  const sendToOverlay = () => {
-    const athlete = athletes[currentIndex];
-    if (!athlete) return;
-
-    const payload: OverlayData = {
-      category: athlete.weight_category,
-      rankInfo: `RANK ${currentIndex + 1}`,
-      timer: '10:00',
-      lifter: {
-        flag: '🇫🇷',
-        country: 'FRA',
-        name: athlete.last_name,
-        firstName: athlete.first_name,
-      },
-      attempts: athlete.attempts[selectedLift].map(at => ({
-        weight: at.weight,
-        status: at.status === 'valid' ? 'good' : at.status === 'invalid' ? 'fail' : 'pending',
-      })),
-      total: athlete.total,
-      competition: 'CHAMPIONNAT FA 2025',
-    };
-
-    channelRef.current?.postMessage(payload);
-  };
-
   const nextAthlete = () => {
+    if (athletes.length === 0) return;
     const nextIndex = (currentIndex + 1) % athletes.length;
     setCurrentIndex(nextIndex);
 
@@ -78,16 +64,18 @@ export default function Controls() {
       })),
       total: a.total,
       competition: 'CHAMPIONNAT FA 2025',
+      currentMovement: selectedLift,
     };
 
-    const channel = new BroadcastChannel('overlay-channel');
-    channel.postMessage({ type: 'UPDATE_OVERLAY', data: overlayData });
-    channel.close();
+    // On envoie les données via WebSocket si la connexion est active
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      const message = { type: 'UPDATE_OVERLAY', data: overlayData };
+      wsRef.current.send(JSON.stringify(message));
+      console.log("Données de l'athlète envoyées via WebSocket.");
+    } else {
+      alert("La connexion au serveur WebSocket n'est pas active. Veuillez lancer le fichier server.js.");
+    }
   };
-
-  useEffect(() => {
-    sendToOverlay();
-  }, [currentIndex, selectedLift, athletes]);
 
   const callApi = async () => {
     if (!excelPath || !jsonPath) {
@@ -107,7 +95,6 @@ export default function Controls() {
         alert(`Erreur API : ${error.error || response.statusText}`);
         return false;
       }
-      // La réponse contient maintenant directement le JSON des athlètes
       const json = await response.json();
       setAthletes(json);
 
@@ -118,8 +105,6 @@ export default function Controls() {
     }
   };
 
-
-  // Lance le script et démarre l'intervalle
   const launchPythonScript = async () => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -135,7 +120,7 @@ export default function Controls() {
 
     setProgress(0);
     const totalDuration = intervalSec * 1000;
-    const updateRate = 100; // ms
+    const updateRate = 100;
     let elapsed = 0;
 
     progressIntervalRef.current = setInterval(() => {
@@ -152,8 +137,6 @@ export default function Controls() {
     }, totalDuration);
   };
 
-
-  // Arrête l'exécution répétée
   const stopScript = () => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
@@ -167,7 +150,6 @@ export default function Controls() {
     alert("Exécution répétée arrêtée.");
   };
 
-
   return (
     <div className="min-h-screen bg-gray-100 py-10 px-6">
       <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-2xl p-6 space-y-6">
@@ -180,7 +162,7 @@ export default function Controls() {
               onClick={() => window.open('/overlay', 'OverlayWindow', 'width=700,height=300')}
               className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg shadow"
             >
-              Ouvrir l'Overlay
+              Ouvrir l&apos;Overlay
             </button>
             <LiftSelector selectedLift={selectedLift} onSelect={setSelectedLift} />
             <NextAthleteButton onClick={nextAthlete} />
@@ -197,7 +179,7 @@ export default function Controls() {
         </section>
 
         <section className="pt-6 border-t space-y-4">
-          <h2 className="text-lg font-semibold text-gray-800">Paramètres de chargement de l'overlay</h2>
+          <h2 className="text-lg font-semibold text-gray-800">Paramètres de chargement de l&aposoverlay</h2>
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">Chemin vers le JSON</label>
             <input
@@ -243,7 +225,6 @@ export default function Controls() {
                 style={{ width: `${progress}%` }}
               ></div>
             </div>
-
           </div>
 
           <div className="mt-10 flex justify-center items-center gap-8">
