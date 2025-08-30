@@ -8,6 +8,9 @@ export type AttemptRaw = {
 export type AthleteRaw = {
   first_name: string;
   last_name: string;
+  club: string;
+  sex: 'M' | 'F';
+  category_age: string;
   weight_category: string;
   total: number;
   attempts: {

@@ -190,7 +190,6 @@ export default function Controls() {
             </button>
             <LiftSelector selectedLift={selectedLift} onSelect={setSelectedLift} />
 
-            {/* NOUVEAU : Le sélecteur d'athlètes */}
             <div className="md:col-span-2 flex flex-col gap-2">
               <label htmlFor="athlete-select" className="text-sm font-medium text-gray-700">Sélectionner un athlète</label>
               <select 
@@ -206,6 +205,26 @@ export default function Controls() {
                 ))}
               </select>
             </div>
+
+            {athletes[currentIndex] && (
+              <div className="md:col-span-2 p-4 bg-gray-50 border rounded-lg space-y-2">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                      Informations de l&apos;athlète
+                  </h3>
+                  <p className="text-sm text-gray-700">
+                      <strong>Club :</strong> {athletes[currentIndex].club}
+                  </p>
+                  <p className="text-sm text-gray-700">
+                      <strong>Sexe :</strong> {athletes[currentIndex].sex}
+                  </p>
+                  <p className="text-sm text-gray-700">
+                      <strong>Catégorie d&apos;âge :</strong> {athletes[currentIndex].category_age}
+                  </p>
+                  <p className="text-sm text-gray-700">
+                      <strong>Catégorie de poids :</strong> {athletes[currentIndex].weight_category}
+                  </p>
+              </div>
+            )}
             
             <NextAthleteButton onClick={nextAthlete} />
           </div>
