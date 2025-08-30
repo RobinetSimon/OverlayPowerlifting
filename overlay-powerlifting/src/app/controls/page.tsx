@@ -219,7 +219,7 @@ export default function Controls() {
             {athletes[currentIndex] && (
               <div className="col-span-full p-5 bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-md border border-gray-200 transform hover:scale-[1.01] transition duration-200 ease-in-out">
                   <h3 className="text-xl font-bold text-gray-900 mb-3 border-b pb-2 border-gray-200">
-                      Détails de l'Athlète
+                      Détails de l&apos;Athlète
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-4 text-sm text-gray-700">
                       <p>
@@ -229,7 +229,7 @@ export default function Controls() {
                           <strong className="text-gray-800">Sexe :</strong> {athletes[currentIndex].sex === 'M' ? 'Masculin' : 'Féminin'}
                       </p>
                       <p>
-                          <strong className="text-gray-800">Catégorie d'âge :</strong> {athletes[currentIndex].category_age}
+                          <strong className="text-gray-800">Catégorie d&apos;âge :</strong> {athletes[currentIndex].category_age}
                       </p>
                       <p>
                           <strong className="text-gray-800">Catégorie de poids :</strong> {athletes[currentIndex].weight_category}
