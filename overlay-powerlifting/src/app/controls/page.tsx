@@ -1,3 +1,4 @@
+// Fichier : page.tsx (modifié)
 'use client';
 import React, { useEffect, useRef, useState } from 'react';
 import { AthleteRaw, OverlayData, AttemptRaw } from '../../types/athlete';
@@ -9,51 +10,57 @@ export default function Controls() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedLift, setSelectedLift] = useState<'squat' | 'bench_press' | 'deadlift'>('squat');
 
-  // Référence pour garder la connexion WebSocket persistante
   const wsRef = useRef<WebSocket | null>(null);
   const [progress, setProgress] = useState(0);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Nouveaux états
   const [jsonPath, setJsonPath] = useState('C:/Users/simon/OneDrive/Bureau/StreamBFC/ProjetOverlay/OverlayPowerlifting/overlay-powerlifting/public/json/datas.json');
   const [excelPath, setExcelPath] = useState('C:/Users/simon/OneDrive/Bureau/StreamBFC/ProjetOverlay/OverlayPowerlifting/dataset/Régional FA JEUNES COMP.xlsm');
   const [intervalSec, setIntervalSec] = useState(30);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   
-  // NOUVEAU : état pour le nom de la compétition
   const [competitionName, setCompetitionName] = useState('NOM COMPETITION');
 
-  // Effet pour établir la connexion WebSocket au chargement de la page
   useEffect(() => {
     const ws = new WebSocket('ws://localhost:8080');
     ws.onopen = () => console.log("Panneau de contrôle connecté au serveur WebSocket !");
     ws.onclose = () => console.log("Panneau de contrôle déconnecté.");
     wsRef.current = ws;
 
-    // On ferme la connexion quand le composant est "démonté" (changement de page, etc.)
     return () => {
       ws.close();
     };
-  }, []); // Le tableau vide est crucial pour n'exécuter cet effet qu'une seule fois
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
-      const res = await fetch(jsonPath);
-      const json = await res.json();
-      setAthletes(json);
+      // Utilisation d'un try-catch pour gérer les erreurs de chemin de fichier
+      try {
+        const res = await fetch(jsonPath);
+        if (!res.ok) {
+          throw new Error(`Failed to fetch JSON from ${jsonPath}`);
+        }
+        const json = await res.json();
+        setAthletes(json);
+      } catch (error) {
+        console.error("Erreur lors de la récupération du JSON:", error);
+        setAthletes([]); // Vider la liste en cas d'erreur
+      }
     };
     fetchData();
   }, [jsonPath]);
 
-  const nextAthlete = () => {
-    if (athletes.length === 0) return;
-    const nextIndex = (currentIndex + 1) % athletes.length;
-    setCurrentIndex(nextIndex);
+  // NOUVEAU : Fonction centralisée pour envoyer les données d'un athlète spécifique
+  const sendAthleteData = (athleteIndex: number) => {
+    if (athletes.length === 0 || !athletes[athleteIndex]) return;
 
-    const a = athletes[nextIndex];
+    // Mettre à jour l'index courant
+    setCurrentIndex(athleteIndex);
+
+    const a = athletes[athleteIndex];
     const overlayData: OverlayData = {
       category: a.weight_category,
-      rankInfo: `RANK ${nextIndex + 1}`,
+      rankInfo: `RANK ${athleteIndex + 1}`, // Le rang peut être plus complexe, ici c'est juste l'ordre
       timer: '10:00',
       lifter: {
         flag: '🇫🇷',
@@ -66,19 +73,31 @@ export default function Controls() {
         status: at.status === 'valid' ? 'good' : at.status === 'invalid' ? 'fail' : 'pending',
       })),
       total: a.total,
-      competition: competitionName, // MODIFIÉ : utilisation du nouvel état
+      competition: competitionName,
       currentMovement: selectedLift,
     };
 
-    // On envoie les données via WebSocket si la connexion est active
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       const message = { type: 'UPDATE_OVERLAY', data: overlayData };
       wsRef.current.send(JSON.stringify(message));
-      console.log("Données de l'athlète envoyées via WebSocket.");
+      console.log(`Données de ${a.first_name} ${a.last_name} envoyées via WebSocket.`);
     } else {
-      alert("La connexion au serveur WebSocket n'est pas active. Veuillez lancer le fichier server.js.");
+      alert("La connexion au serveur WebSocket n'est pas active.");
     }
   };
+  
+  const nextAthlete = () => {
+    if (athletes.length === 0) return;
+    const nextIndex = (currentIndex + 1) % athletes.length;
+    sendAthleteData(nextIndex);
+  };
+  
+  // NOUVEAU : Gestionnaire pour le changement dans le menu déroulant
+  const handleAthleteSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const selectedIndex = parseInt(e.target.value, 10);
+      sendAthleteData(selectedIndex);
+  };
+
 
   const callApi = async () => {
     if (!excelPath || !jsonPath) {
@@ -109,6 +128,7 @@ export default function Controls() {
   };
 
   const launchPythonScript = async () => {
+    // ... (votre code existant pour launchPythonScript reste inchangé)
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
@@ -141,6 +161,7 @@ export default function Controls() {
   };
 
   const stopScript = () => {
+    // ... (votre code existant pour stopScript reste inchangé)
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
@@ -160,28 +181,46 @@ export default function Controls() {
 
         <section className="space-y-4">
           <h2 className="text-xl font-semibold text-gray-800">Contrôles</h2>
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
             <button
               onClick={() => window.open('/overlay', 'OverlayWindow', 'width=700,height=300')}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg shadow"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg shadow w-full"
             >
               Ouvrir l&apos;Overlay
             </button>
             <LiftSelector selectedLift={selectedLift} onSelect={setSelectedLift} />
+
+            {/* NOUVEAU : Le sélecteur d'athlètes */}
+            <div className="md:col-span-2 flex flex-col gap-2">
+              <label htmlFor="athlete-select" className="text-sm font-medium text-gray-700">Sélectionner un athlète</label>
+              <select 
+                id="athlete-select"
+                value={currentIndex} 
+                onChange={handleAthleteSelect}
+                className="w-full p-2 border rounded-lg shadow-sm"
+              >
+                {athletes.map((athlete, index) => (
+                  <option key={`${athlete.first_name}-${athlete.last_name}-${index}`} value={index}>
+                    {athlete.first_name} {athlete.last_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
             <NextAthleteButton onClick={nextAthlete} />
           </div>
         </section>
-
+        
         <section className="text-gray-600 text-sm text-center pt-4 border-t">
           <p>
-            Athlète actuel :{' '}
-            {athletes[currentIndex]
-              ? `${athletes[currentIndex].first_name} ${athletes[currentIndex].last_name}`
-              : 'Chargement...'}
+            Athlète suivant :{' '}
+            {athletes.length > 0
+              ? `${athletes[(currentIndex + 1) % athletes.length].first_name} ${athletes[(currentIndex + 1) % athletes.length].last_name}`
+              : 'Aucun athlète chargé.'}
           </p>
         </section>
-
-        <section className="pt-6 border-t space-y-4">
+      
+         <section className="pt-6 border-t space-y-4">
           <h2 className="text-lg font-semibold text-gray-800">Paramètres de chargement de l&apos;overlay</h2>
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700">Chemin vers le JSON</label>
@@ -200,7 +239,6 @@ export default function Controls() {
               className="w-full p-2 border rounded"
             />
 
-            {/* NOUVEAU : champ de saisie pour le nom de la compétition */}
             <label className="block text-sm font-medium text-gray-700">Nom de la compétition</label>
             <input
               type="text"
