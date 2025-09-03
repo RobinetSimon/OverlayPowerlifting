@@ -3,14 +3,18 @@ import React, { useLayoutEffect, useRef } from 'react';
 import gsap from 'gsap';
 
 const AttemptBox = ({ weight, status }: { weight: number; status: string }) => {
-  const getColor = () => {
-    if (status === 'good') return 'bg-green-500';
-    if (status === 'fail') return 'bg-red-600';
-    return 'bg-gray-300';
+  const getAttemptClasses = () => {
+    if (status === 'good') {
+      return 'bg-green-500 text-white';
+    }
+    if (status === 'fail') {
+      return 'bg-red-600 text-white';
+    }
+    return 'text-white';
   };
 
   return (
-    <div className={`card-box ${getColor()} text-white font-bold px-2 text-sm flex items-center justify-center min-w-[40px] h-[18px]`}>
+    <div className={`card-box ${getAttemptClasses()} font-bold px-2 text-sm flex items-center justify-center min-w-[40px] h-[18px]`}>
       {weight}
     </div>
   );
