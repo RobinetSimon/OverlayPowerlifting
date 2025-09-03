@@ -10,7 +10,6 @@ const AttemptBox = ({ weight, status }: { weight: number; status: string }) => {
     if (status === 'fail') {
       return 'bg-red-600 text-white';
     }
-    // Pour le statut "pending", texte blanc sans fond
     return 'text-white';
   };
 
@@ -58,80 +57,33 @@ export default function PowerliftingOverlay({
   useLayoutEffect(() => {
     if (visible && overlayRef.current) {
       const ctx = gsap.context(() => {
-        // Création de la timeline
         const tl = gsap.timeline();
-
-        // PHASE 1: Le contexte se révèle depuis le centre
-        tl.from(['#category-box', '#movement-box'], {
-          scaleX: 0,
-          opacity: 0,
-          duration: 0.6,
-          ease: 'power3.out',
-          stagger: 0.1 // léger décalage entre les deux
-        });
-
-        // PHASE 2: La barre de l'athlète apparaît, puis son nom
-        tl.from('#lifter-bg', {
-          x: -50,
-          opacity: 0,
-          duration: 0.5,
-          ease: 'power2.out'
-        }, "-=0.4"); // Se joue un peu avant la fin de l'animation précédente
-
-        tl.from('#lifter-name', {
-          x: -20,
-          opacity: 0,
-          duration: 0.5,
-          ease: 'power2.out'
-        }, "-=0.3");
-
-        // PHASE 3: Les boîtes d'essais apparaissent en séquence
-        tl.from('.attempt-box-wrapper', {
-          scale: 0.5,
-          opacity: 0,
-          duration: 0.3,
-          stagger: 0.1 // La clé pour l'effet "chargement"
-        }, "-=0.3");
-
-        // PHASE 4: Le total apparaît avec un effet d'impact
-        tl.from('#total-box', {
-          scale: 0.5,
-          opacity: 0,
-          duration: 0.5,
-          ease: 'back.out(1.7)' // Effet de rebond
-        });
-
-        // PHASE 5: Le nom de la compétition apparaît en fondu
-        tl.from('#competition-row', {
-          y: 20,
-          opacity: 0,
-          duration: 0.6,
-          ease: 'power2.out'
-        }, "-=0.4");
-
+        tl.from(['#category-box', '#movement-box'], { scaleX: 0, opacity: 0, duration: 0.6, ease: 'power3.out', stagger: 0.1 });
+        tl.from('#lifter-bg', { x: -50, opacity: 0, duration: 0.5, ease: 'power2.out' }, "-=0.4");
+        tl.from('#lifter-name', { x: -20, opacity: 0, duration: 0.5, ease: 'power2.out' }, "-=0.3");
+        tl.from('.attempt-box-wrapper', { scale: 0.5, opacity: 0, duration: 0.3, stagger: 0.1 }, "-=0.3");
+        tl.from('#total-box', { scale: 0.5, opacity: 0, duration: 0.5, ease: 'back.out(1.7)' });
+        tl.from('#competition-row', { y: 20, opacity: 0, duration: 0.6, ease: 'power2.out' }, "-=0.4");
       }, overlayRef);
       return () => ctx.revert();
     }
   }, [visible]);
 
-  if (!visible) return null;
+  if (!visible || !lifter || !Array.isArray(attempts)) {
+    return null;
+  }
 
   const formatMovement = (movement: string) => {
     switch (movement) {
-      case 'squat':
-        return 'Squat';
-      case 'bench_press':
-        return 'Bench';
-      case 'deadlift':
-        return 'Deadlift';
-      default:
-        return movement;
+      case 'squat': return 'Squat';
+      case 'bench_press': return 'Bench';
+      case 'deadlift': return 'Deadlift';
+      default: return movement;
     }
   };
 
   return (
     <div ref={overlayRef} className="fixed bottom-4 left-4 z-50 flex flex-col gap-1">
-      {/* Ligne 1 - catégorie et mouvement */}
       <div className="row-1 flex h-8 text-white text-sm font-bold gap-1">
         <div id="category-box" className="relative px-3 flex items-center bg-blue-900 clip-both-left">
           {category}
@@ -141,7 +93,6 @@ export default function PowerliftingOverlay({
         </div>
       </div>
 
-      {/* Ligne 2 - nom, prénom, essais, total */}
       <div className="relative row-2">
         <div id="lifter-bg" className="card-bg bg-blue-900 absolute inset-0 -z-10" />
         <div className="flex gap-1 p-0.5 items-center">
@@ -165,7 +116,6 @@ export default function PowerliftingOverlay({
         </div>
       </div>
 
-      {/* Ligne 3 - compétition */}
       <div id="competition-row" className="relative row-3">
         <div className="card-bg bg-blue-900 absolute inset-0 -z-10" />
         <div className="flex items-center p-0.5">

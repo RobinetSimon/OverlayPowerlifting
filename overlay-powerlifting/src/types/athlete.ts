@@ -39,5 +39,6 @@ export type OverlayData = {
   total: number;
   competition: string;
   currentMovement: string;
+  isRecordAttempt?: boolean;
 };
 

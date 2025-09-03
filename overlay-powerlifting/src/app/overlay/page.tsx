@@ -1,10 +1,10 @@
-// Fichier: overlaypage.tsx
 'use client';
 
 import React, { useEffect, useState } from 'react';
 import PowerliftingOverlay from '../../components/mainOverlay';
 import { OverlayData } from '../../types/athlete';
 import { AnimatePresence, motion } from 'framer-motion';
+import ErrorBoundary from '../../components/ErrorBoundary';
 
 export default function OverlayPage() {
   const [athlete, setAthlete] = useState<OverlayData | null>(null);
@@ -19,32 +19,35 @@ export default function OverlayPage() {
       };
 
       ws.onmessage = (event) => {
-        const message = JSON.parse(event.data);
-        const { type, data } = message;
+        try {
+          const message = JSON.parse(event.data);
+          const { type, data } = message;
 
-        if (type === 'UPDATE_OVERLAY') {
-          setAthlete(data);
-          setVisible(true);
+          if (type === 'UPDATE_OVERLAY' && data) {
+            setAthlete(data);
+            setVisible(true);
 
-          setTimeout(() => {
-            setVisible(false);
-          }, 10000); // masque après 10 secondes
+            setTimeout(() => {
+              setVisible(false);
+            }, 10000);
+          }
+        } catch (error) {
+          console.error("Erreur lors de l'analyse du message WebSocket :", error, event.data);
         }
       };
 
       ws.onclose = () => {
         console.log('Overlay déconnecté. Tentative de reconnexion dans 3 secondes...');
-        setTimeout(connectWebSocket, 3000); // Reconnexion auto
+        setTimeout(connectWebSocket, 3000);
       };
 
       ws.onerror = (error) => {
         console.error('Erreur WebSocket Overlay:', error);
-        ws.close(); // Provoque l'appel à onclose pour la reconnexion
+        ws.close();
       };
 
-      // Fonction de nettoyage pour arrêter la reconnexion si on quitte la page
       return () => {
-        ws.onclose = null; 
+        ws.onclose = null;
         ws.close();
       };
     };
@@ -56,20 +59,22 @@ export default function OverlayPage() {
 
   return (
     <div className="w-screen h-screen flex items-center justify-center overflow-hidden">
-      <AnimatePresence>
-        {athlete && visible && (
-          <motion.div
-            key="overlay"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.5, ease: 'easeInOut' }}
-            className="overflow-hidden"
-          >
-            <PowerliftingOverlay {...athlete} visible={true} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ErrorBoundary>
+        <AnimatePresence>
+          {athlete && visible && (
+            <motion.div
+              key="overlay"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.5, ease: 'easeInOut' }}
+              className="overflow-hidden"
+            >
+              <PowerliftingOverlay {...athlete} visible={true} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </ErrorBoundary>
     </div>
   );
 }
