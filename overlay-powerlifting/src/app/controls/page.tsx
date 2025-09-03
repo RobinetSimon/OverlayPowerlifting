@@ -163,7 +163,11 @@ export default function Controls() {
         )}
 
         <section className="space-y-6 p-6 bg-blue-50 rounded-2xl shadow-inner border border-blue-100">
-          <h2 className="text-2xl font-bold text-gray-800 border-b pb-3 mb-4">Contrôles Principaux</h2>
+          {/* --- MODIFICATION ICI : Ajout d'un emoji et mise en page flex --- */}
+          <h2 className="text-2xl font-bold text-gray-800 border-b pb-3 mb-4 flex items-center gap-3">
+            <span role="img" aria-label="Contrôles">🕹️</span>
+            <span>Contrôles Principaux</span>
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-center">
             <button
               onClick={() => window.open('/overlay', 'OverlayWindow', 'width=1200,height=675')}
@@ -215,7 +219,11 @@ export default function Controls() {
         </section>
         
          <section className="pt-8 border-t space-y-6 p-6 bg-indigo-50 rounded-2xl shadow-inner">
-          <h2 className="text-2xl font-bold border-b pb-3 mb-4">Configuration API et Fichiers</h2>
+          {/* --- MODIFICATION ICI : Ajout d'un emoji et mise en page flex --- */}
+          <h2 className="text-2xl font-bold border-b pb-3 mb-4 flex items-center gap-3">
+             <span role="img" aria-label="Configuration">⚙️</span>
+             <span>Configuration API et Fichiers</span>
+          </h2>
           <div className="space-y-4">
             <div>
               <label htmlFor="json-path" className="block text-sm font-medium mb-1">Chemin vers le JSON</label>

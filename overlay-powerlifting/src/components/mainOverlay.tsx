@@ -100,15 +100,20 @@ export default function PowerliftingOverlay({
             {lifter.firstName} {lifter.name}
           </div>
 
-          {attempts.map((a, i) =>
-            a.weight != null ? (
-              <div className="attempt-box-wrapper" key={i}>
-                <AttemptBox weight={a.weight} status={a.status} />
+          {/* Rendu des 3 essais (avec placeholders si nécessaire) */}
+          {[0, 1, 2].map(index => {
+            const attempt = attempts[index];
+            return (
+              <div className="attempt-box-wrapper" key={index}>
+                {attempt && attempt.weight != null ? (
+                  <AttemptBox weight={attempt.weight} status={attempt.status} />
+                ) : (
+                  // Placeholder pour les essais non encore définis
+                  <div className="min-w-[40px] h-[18px]" />
+                )}
               </div>
-            ) : (
-              <div key={i} className="card-box bg-gray-600 w-[40px] h-[18px]" />
-            )
-          )}
+            );
+          })}
 
           <div id="total-box" className="card-box bg-yellow-400 text-black font-bold px-2 text-md h-[18px] flex items-center justify-center">
             {total.toFixed(1)}
@@ -127,3 +132,4 @@ export default function PowerliftingOverlay({
     </div>
   );
 }
+
