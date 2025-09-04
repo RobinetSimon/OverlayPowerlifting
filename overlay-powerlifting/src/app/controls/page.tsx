@@ -15,16 +15,19 @@ export default function Controls() {
 
   const [jsonPath, setJsonPath] = useState('C:/Users/simon/OneDrive/Bureau/StreamBFC/ProjetOverlay/OverlayPowerlifting/overlay-powerlifting/public/json/datas.json');
   const [excelPath, setExcelPath] = useState('C:/Users/simon/OneDrive/Bureau/StreamBFC/ProjetOverlay/OverlayPowerlifting/dataset/Régional FA JEUNES COMP.xlsm');
-  const [intervalSec, setIntervalSec] = useState(30);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   
-  const [competitionName, setCompetitionName] = useState('NOM COMPETITION');
+  const [competitionName, setCompetitionName] = useState(process.env.NEXT_PUBLIC_DEFAULT_COMPETITION_NAME || 'COMPETITION');
+  const [intervalSec, setIntervalSec] = useState(parseInt(process.env.NEXT_PUBLIC_DEFAULT_UPDATE_INTERVAL_SECONDS || '30'));
   
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:8080');
+    const hostname = window.location.hostname;
+    const wsPort = process.env.NEXT_PUBLIC_API_PORT || '3000';
+    const ws = new WebSocket(`ws://${hostname}:${wsPort}`);
+
     ws.onopen = () => console.log("Panneau de contrôle connecté au serveur WebSocket !");
     ws.onclose = () => console.log("Panneau de contrôle déconnecté.");
     wsRef.current = ws;
@@ -100,7 +103,9 @@ export default function Controls() {
 
     try {
       const params = new URLSearchParams({ excelPath, jsonPath });
-      const response = await fetch(`http://localhost:3000/getData?${params.toString()}`);
+      const apiPort = process.env.NEXT_PUBLIC_API_PORT || '3000';
+      const apiUrl = `http://${window.location.hostname}:${apiPort}`;
+      const response = await fetch(`${apiUrl}/getData?${params.toString()}`);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);

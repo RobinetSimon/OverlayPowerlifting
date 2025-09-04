@@ -12,7 +12,9 @@ export default function OverlayPage() {
 
   useEffect(() => {
     const connectWebSocket = () => {
-      const ws = new WebSocket('ws://localhost:8080');
+      const hostname = window.location.hostname;
+      const wsPort = process.env.NEXT_PUBLIC_API_PORT || '3000';
+      const ws = new WebSocket(`ws://${hostname}:${wsPort}`);
 
       ws.onopen = () => {
         console.log('Overlay connecté au serveur WebSocket.');
@@ -26,10 +28,10 @@ export default function OverlayPage() {
           if (type === 'UPDATE_OVERLAY' && data) {
             setAthlete(data);
             setVisible(true);
-
+            const duration = (parseInt(process.env.NEXT_PUBLIC_OVERLAY_DURATION_SECONDS || '10')) * 1000;
             setTimeout(() => {
               setVisible(false);
-            }, 10000);
+            }, duration);
           }
         } catch (error) {
           console.error("Erreur lors de l'analyse du message WebSocket :", error, event.data);
@@ -38,7 +40,8 @@ export default function OverlayPage() {
 
       ws.onclose = () => {
         console.log('Overlay déconnecté. Tentative de reconnexion dans 3 secondes...');
-        setTimeout(connectWebSocket, 3000);
+        const reconnectDelay = (parseInt(process.env.NEXT_PUBLIC_WEBSOCKET_RECONNECT_DELAY_SECONDS || '3')) * 1000;
+        setTimeout(connectWebSocket, reconnectDelay);
       };
 
       ws.onerror = (error) => {

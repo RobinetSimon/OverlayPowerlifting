@@ -1,6 +1,30 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Voir https://help.github.com/articles/ignoring-files/ pour plus de détails.
 
-# dependencies
+#-----------------------------------------------------------------------
+# Fichiers d'environnement - NE JAMAIS PARTAGER
+#-----------------------------------------------------------------------
+# Règle explicite pour plus de sécurité.
+# N'oubliez pas de créer un fichier .env.example pour partager la structure des variables.
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+#-----------------------------------------------------------------------
+# Fichiers générés spécifiques à VOTRE application
+#-----------------------------------------------------------------------
+# Fichiers JSON créés par vos scripts Python.
+# Ils sont générés à la volée et ne doivent pas être versionnés.
+/public/json/datas.json
+
+# Dossier pour les uploads temporaires de l'API
+# (Si votre API est dans le même répertoire)
+/uploads/
+
+#-----------------------------------------------------------------------
+# Dépendances et gestionnaires de paquets
+#-----------------------------------------------------------------------
 /node_modules
 /.pnp
 .pnp.*
@@ -10,32 +34,39 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
-
-# next.js
+#-----------------------------------------------------------------------
+# Fichiers de build et cache de Next.js
+#-----------------------------------------------------------------------
 /.next/
 /out/
-
-# production
 /build
 
-# misc
+#-----------------------------------------------------------------------
+# Fichiers TypeScript
+#-----------------------------------------------------------------------
+*.tsbuildinfo
+next-env.d.ts
+
+#-----------------------------------------------------------------------
+# Divers
+#-----------------------------------------------------------------------
+# Fichiers système de macOS
 .DS_Store
+
+# Fichiers de certificats
 *.pem
 
-# debug
+# Déploiement Vercel
+.vercel
+
+# Dossier de résultats de tests
+/coverage
+
+#-----------------------------------------------------------------------
+# Fichiers de logs de débogage
+#-----------------------------------------------------------------------
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
