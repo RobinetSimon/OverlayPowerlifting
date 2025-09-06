@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 'use client';
 import React, { useEffect, useRef, useState } from 'react';
 import { AthleteRaw, OverlayData, AttemptRaw, OverlayAttempt } from '../../types/athlete'; 
@@ -120,6 +121,7 @@ export default function Controls() {
       const json = await response.json();
       setAthletes(json);
       return true;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(`Erreur lors de l'appel API : ${err.message}`);
       return false;
@@ -195,6 +197,7 @@ export default function Controls() {
       setUploadStatus('success');
       setUploadMessage(result.message || 'Fichier téléversé avec succès !');
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setUploadStatus('error');
       setUploadMessage(err.message);
@@ -277,7 +280,7 @@ export default function Controls() {
             </h2>
             <div className="space-y-4">
               <p className="text-sm text-amber-700">
-                Importez le fichier Excel contenant les records régionaux pour les activer dans l'overlay.
+                Importez le fichier Excel contenant les records régionaux pour les activer dans l&apos;overlay.
               </p>
               <div className="flex flex-col sm:flex-row items-center gap-4">
                 <label htmlFor="record-file-upload" className="flex-1 w-full cursor-pointer bg-white text-gray-700 font-semibold py-3 px-4 border border-gray-300 rounded-xl shadow-sm hover:bg-gray-50 transition duration-200 text-center">

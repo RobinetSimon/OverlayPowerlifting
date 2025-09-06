@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react'; // AJOUT : useRef
 import PowerliftingOverlay from '../../components/mainOverlay';
 import { OverlayData } from '../../types/athlete';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { AnimatePresence, motion } from 'framer-motion';
 import ErrorBoundary from '../../components/ErrorBoundary';
 
