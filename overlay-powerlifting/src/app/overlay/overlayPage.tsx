@@ -1,5 +1,6 @@
 'use client';
-import React, { useEffect, useState, useRef } from 'react'; // AJOUT : useRef
+
+import React, { useEffect, useState } from 'react';
 import PowerliftingOverlay from '../../components/mainOverlay';
 import { OverlayData } from '../../types/athlete';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -8,7 +9,6 @@ import ErrorBoundary from '../../components/ErrorBoundary';
 export default function OverlayPage() {
   const [athlete, setAthlete] = useState<OverlayData | null>(null);
   const [visible, setVisible] = useState(false);
-  const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null); // AJOUT
 
   useEffect(() => {
     const connectWebSocket = () => {
@@ -26,18 +26,10 @@ export default function OverlayPage() {
           const { type, data } = message;
 
           if (type === 'UPDATE_OVERLAY' && data) {
-            // MODIFICATION : On nettoie l'ancien timer
-            if (hideTimeoutRef.current) {
-              clearTimeout(hideTimeoutRef.current);
-            }
-
             setAthlete(data);
             setVisible(true);
-
             const duration = (parseInt(process.env.NEXT_PUBLIC_OVERLAY_DURATION_SECONDS || '10')) * 1000;
-
-            // MODIFICATION : On stocke la référence du nouveau timer
-            hideTimeoutRef.current = setTimeout(() => {
+            setTimeout(() => {
               setVisible(false);
             }, duration);
           }
@@ -60,24 +52,29 @@ export default function OverlayPage() {
       return () => {
         ws.onclose = null;
         ws.close();
-        if (hideTimeoutRef.current) {
-          clearTimeout(hideTimeoutRef.current);
-        }
       };
     };
 
     const cleanup = connectWebSocket();
     return cleanup;
-
+    
   }, []);
 
   return (
-    <div className="w-screen h-screen flex items-end justify-center overflow-hidden">
+    <div className="w-screen h-screen flex items-center justify-center overflow-hidden">
       <ErrorBoundary>
         <AnimatePresence>
-          {/* MODIFICATION : On passe directement les props au composant principal */}
           {athlete && visible && (
-            <PowerliftingOverlay {...athlete} visible={true} />
+            <motion.div
+              key="overlay"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.5, ease: 'easeInOut' }}
+              className="overflow-hidden"
+            >
+              <PowerliftingOverlay {...athlete} visible={true} />
+            </motion.div>
           )}
         </AnimatePresence>
       </ErrorBoundary>

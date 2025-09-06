@@ -335,8 +335,8 @@
           "status": "invalid"
         },
         {
-          "weight": 130,
-          "status": "invalid"
+          "weight": 300,
+          "status": "pending"
         }
       ],
       "bench_press": [
@@ -368,7 +368,7 @@
         }
       ]
     },
-    "total": 420
+    "total": 595
   },
   {
     "club": "0420 - STADE AUXERROIS",
@@ -388,8 +388,8 @@
           "status": "valid"
         },
         {
-          "weight": 117.5,
-          "status": "invalid"
+          "weight": 300,
+          "status": "pending"
         }
       ],
       "bench_press": [
@@ -421,7 +421,7 @@
         }
       ]
     },
-    "total": 397.5
+    "total": 585
   },
   {
     "club": "0587 - TEMPLE GYM",
@@ -441,8 +441,8 @@
           "status": "valid"
         },
         {
-          "weight": 107.5,
-          "status": "invalid"
+          "weight": 300,
+          "status": "pending"
         }
       ],
       "bench_press": [
@@ -474,7 +474,7 @@
         }
       ]
     },
-    "total": 397.5
+    "total": 655
   },
   {
     "club": "0587 - TEMPLE GYM",
@@ -494,8 +494,8 @@
           "status": "valid"
         },
         {
-          "weight": 200,
-          "status": "valid"
+          "weight": 300,
+          "status": "pending"
         }
       ],
       "bench_press": [
@@ -527,7 +527,7 @@
         }
       ]
     },
-    "total": 465
+    "total": 565
   },
   {
     "club": "0420 - STADE AUXERROIS",
@@ -547,8 +547,8 @@
           "status": "valid"
         },
         {
-          "weight": 230,
-          "status": "valid"
+          "weight": 300,
+          "status": "pending"
         }
       ],
       "bench_press": [
@@ -580,7 +580,7 @@
         }
       ]
     },
-    "total": 520
+    "total": 590
   },
   {
     "club": "0294 - HC AVALLON MFAC",
@@ -600,8 +600,8 @@
           "status": "valid"
         },
         {
-          "weight": 215,
-          "status": "valid"
+          "weight": 300,
+          "status": "pending"
         }
       ],
       "bench_press": [
@@ -633,7 +633,7 @@
         }
       ]
     },
-    "total": 520
+    "total": 605
   },
   {
     "club": "0024 - AS FOURCHAMBAULT",

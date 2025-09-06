@@ -1,6 +1,15 @@
 const { execFile } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const { getRecords } = require('./recordController');
+
+const getRecordValue = (records, sex, ageCat, weightCat, movement) => {
+  try {
+    return records[sex][ageCat][weightCat][movement];
+  } catch (e) {
+    return null;
+  }
+};
 
 exports.launchScript = (req, res) => {
   const excelPath = req.query.excelPath;
@@ -14,26 +23,51 @@ exports.launchScript = (req, res) => {
 
   execFile('python', [scriptPath, excelPath, jsonPath], (error, stdout, stderr) => {
     if (error) {
-      console.error(`Erreur lors de l'exécution : ${error.message}`);
       return res.status(500).json({ error: error.message });
     }
     if (stderr) {
       console.error(`stderr: ${stderr}`);
     }
-    console.log(`stdout: ${stdout}`);
 
-    // Une fois le script exécuté, on lit le fichier JSON et on le renvoie
     fs.readFile(jsonPath, 'utf8', (err, data) => {
       if (err) {
-        console.error(`Erreur lecture fichier JSON : ${err.message}`);
         return res.status(500).json({ error: "Impossible de lire le fichier JSON généré" });
       }
 
       try {
-        const jsonData = JSON.parse(data);
-        res.status(200).json(jsonData);
+        let athletes = JSON.parse(data);
+        const records = getRecords();
+
+        if (records && Object.keys(records).length > 0) {
+          athletes = athletes.map(athlete => {
+            const { sex, category_age } = athlete;
+            let { weight_category } = athlete;
+
+            if (!sex || !category_age || !weight_category) return athlete;
+
+            // --- CORRECTION DÉFINITIVE ---
+            // On transforme "66 Kg" en "66kg" (tout en minuscules, sans espaces)
+            weight_category = weight_category.toLowerCase().replace(/\s/g, '');
+
+            for (const movement of ['squat', 'bench_press', 'deadlift']) {
+              const recordValue = getRecordValue(records, sex, category_age, weight_category, movement);
+              
+              if (athlete.attempts[movement]) {
+                athlete.attempts[movement] = athlete.attempts[movement].map(attempt => {
+                  if (recordValue !== null && attempt.weight > recordValue) {
+                    return { ...attempt, isRecordAttempt: true };
+                  }
+                  return attempt;
+                });
+              }
+            }
+            return athlete;
+          });
+        }
+        
+        res.status(200).json(athletes);
+
       } catch (parseErr) {
-        console.error(`Erreur parsing JSON : ${parseErr.message}`);
         res.status(500).json({ error: "Le fichier JSON est mal formé" });
       }
     });

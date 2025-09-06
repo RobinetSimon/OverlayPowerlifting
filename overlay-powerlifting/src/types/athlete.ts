@@ -3,6 +3,8 @@ export type AttemptStatus = 'valid' | 'invalid' | 'pending';
 export type AttemptRaw = {
   weight: number;
   status: AttemptStatus;
+  isRecordAttempt?: boolean;
+  
 };
 
 export type AthleteRaw = {
@@ -23,6 +25,14 @@ export type AthleteRaw = {
 export type OverlayAttempt = {
   weight: number;
   status: 'good' | 'fail' | 'pending';
+  isRecordAttempt?: boolean;
+};
+
+export type Lifter = {
+  flag: string;
+  country: string;
+  name: string;
+  firstName: string;
 };
 
 export type OverlayData = {
