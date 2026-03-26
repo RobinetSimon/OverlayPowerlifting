@@ -1,19 +1,37 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const http = require('http'); // On a besoin du module http de Node
-const { WebSocketServer } = require('ws'); // On importe le serveur WebSocket
-const dataRoutes = require('./routes/dataRoutes');
+import express from 'express';
+import cors from 'cors';
+import http from 'http';
+import path from 'path';
+import fs from 'fs';
+import { WebSocketServer } from 'ws';
+import { fileURLToPath } from 'url';
+// Assuming dataRoutes is a local file, ensure it uses export default or named exports
+import dataRoutes from './routes/dataRoutes';
 
 const app = express();
-const server = http.createServer(app); // On crée un serveur HTTP à partir de l'app Express
+const server = http.createServer(app);
 
-// --- CONFIGURATION WEBSOCKET ---
-// On attache le serveur WebSocket au même serveur HTTP que notre API
+let basePath = import.meta.dir;
+if (basePath.startsWith("$bunfs")) {
+  // If compiled, use the physical directory where the executable lives
+  basePath = path.dirname(process.execPath);
+}
+
+// Serve static files
+app.use(express.static('public'));
+
+// --- MIDDLEWARE ---
+app.use(express.json());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
+  methods: ['GET', 'POST']
+}));
+
+// --- ROUTES ---
+app.use('/getData', dataRoutes);
+
+// --- WEBSOCKET CONFIGURATION ---
 const wss = new WebSocketServer({ server });
-
-const WEBSOCKET_PORT_INFO = process.env.API_PORT || 3000;
-console.log(`✅ Serveur WebSocket démarré sur le port: ${WEBSOCKET_PORT_INFO}`);
 
 wss.on('connection', ws => {
   console.log('🔗 Un nouveau client est connecté.');
@@ -21,7 +39,7 @@ wss.on('connection', ws => {
   ws.on('message', message => {
     console.log('📥 Message reçu: %s', message);
     wss.clients.forEach(client => {
-      if (client.readyState === ws.OPEN) {
+      if (client.readyState === 1) { // 1 is OPEN
         client.send(message.toString());
       }
     });
@@ -31,20 +49,8 @@ wss.on('connection', ws => {
   ws.onerror = (error) => console.error('❗️ Erreur WebSocket:', error);
 });
 
-
-// --- CONFIGURATION API EXPRESS ---
-app.use(express.json());
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
-  methods: ['GET', 'POST']
-}));
-
-app.use('/getData', dataRoutes);
-
 const PORT = process.env.API_PORT || 3000;
 
-// On utilise server.listen au lieu de app.listen
 server.listen(PORT, () => {
-  console.log(`✅ Serveur API lancé sur le port ${PORT}`);
+  console.log(`✅ Serveur lancé sur le port ${PORT}`);
 });
-

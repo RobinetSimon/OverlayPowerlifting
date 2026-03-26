@@ -1,41 +1,30 @@
-const { execFile } = require('child_process');
+const { extractExcelData } = require('../scripts/extract_datas');
 const path = require('path');
-const fs = require('fs');
 
-exports.launchScript = (req, res) => {
-  const excelPath = req.query.excelPath;
-  const jsonPath = req.query.jsonPath;
+exports.launchScript = async (req, res) => {
+  const { excelPath, jsonPath } = req.query;
 
   if (!excelPath || !jsonPath) {
     return res.status(400).json({ error: "Paramètres excelPath et jsonPath requis" });
   }
 
-  const scriptPath = path.resolve(__dirname, '../scripts/extract_datas.py');
+  try {
+    // Résolution des chemins si nécessaire
+    const absoluteExcelPath = path.resolve(excelPath);
+    const absoluteJsonPath = path.resolve(jsonPath);
 
-  execFile('python', [scriptPath, excelPath, jsonPath], (error, stdout, stderr) => {
-    if (error) {
-      console.error(`Erreur lors de l'exécution : ${error.message}`);
-      return res.status(500).json({ error: error.message });
-    }
-    if (stderr) {
-      console.error(`stderr: ${stderr}`);
-    }
-    console.log(`stdout: ${stdout}`);
+    // Appel direct de la fonction JS (plus besoin de child_process / python)
+    const athletesData = await extractExcelData(absoluteExcelPath, absoluteJsonPath);
 
-    // Une fois le script exécuté, on lit le fichier JSON et on le renvoie
-    fs.readFile(jsonPath, 'utf8', (err, data) => {
-      if (err) {
-        console.error(`Erreur lecture fichier JSON : ${err.message}`);
-        return res.status(500).json({ error: "Impossible de lire le fichier JSON généré" });
-      }
+    // Réponse directe avec les données extraites
+    console.log(`Extraction réussie pour : ${excelPath}`);
+    res.status(200).json(athletesData);
 
-      try {
-        const jsonData = JSON.parse(data);
-        res.status(200).json(jsonData);
-      } catch (parseErr) {
-        console.error(`Erreur parsing JSON : ${parseErr.message}`);
-        res.status(500).json({ error: "Le fichier JSON est mal formé" });
-      }
+  } catch (error) {
+    console.error(`Erreur lors de l'extraction : ${error.message}`);
+    res.status(500).json({ 
+      error: "Erreur lors du traitement du fichier Excel", 
+      details: error.message 
     });
-  });
+  }
 };
