@@ -54,6 +54,13 @@ exports.extractExcelData = async (excelPath, jsonPath) => {
         const firstName = row.getCell(fields.firstName).value;
         if (!lastName || !firstName) return;
 
+        if (
+            !lastName || 
+            !firstName ||
+            lastName === "Nom" || 
+            firstName === "Prénom"
+        ) return;
+
         const getVal = (cellIndex) => {
             const cell = row.getCell(cellIndex);
             // Gère les cellules avec formules
