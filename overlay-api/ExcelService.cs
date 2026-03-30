@@ -9,7 +9,7 @@ public static class ExcelService
     private static readonly int[] BenchCols = [15, 16, 17];
     private static readonly int[] DeadliftCols = [18, 19, 20];
 
-    public static List<Athlete> Extract(string excelPath, string jsonPath)
+    public static List<Athlete> Extract(string excelPath)
     {
         using var workbook = new XLWorkbook(excelPath);
         var ws = workbook.Worksheet(1);
@@ -33,15 +33,21 @@ public static class ExcelService
                 CategoryAge: GetText(wsRow.Cell(5)),
                 LastName: lastName,
                 FirstName: firstName,
+                Bodyweight: GetNumber(wsRow.Cell(8)),
                 WeightCategory: GetText(wsRow.Cell(9)),
                 Attempts: new AthleteAttempts(
                     Squat: SquatCols.Select(c => MakeAttempt(wsRow.Cell(c))).ToList(),
                     BenchPress: BenchCols.Select(c => MakeAttempt(wsRow.Cell(c))).ToList(),
                     Deadlift: DeadliftCols.Select(c => MakeAttempt(wsRow.Cell(c))).ToList()),
-                Total: GetNumber(wsRow.Cell(21))
+                Total: GetNumber(wsRow.Cell(21)),
+                IpfCoefficient: GetNumber(wsRow.Cell(10)),
+                Ranking: GetInt(wsRow.Cell(22)),
+                GlPoints: GetNumber(wsRow.Cell(23))
             ));
         }
 
+        // Save JSON next to the executable
+        var jsonPath = Path.Combine(AppContext.BaseDirectory, "public", "json", "datas.json");
         var dir = Path.GetDirectoryName(jsonPath);
         if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
         File.WriteAllText(jsonPath, JsonSerializer.Serialize(athletes, AppJsonContext.Default.ListAthlete));
@@ -66,9 +72,7 @@ public static class ExcelService
             else if (bg.ColorType == XLColorType.Color)
             {
                 var c = bg.Color;
-                // Green (#00FF00) = valid
                 if (c.R == 0 && c.G == 255 && c.B == 0) return "valid";
-                // Purple (#800080) + strikethrough = invalid
                 if (c.R == 128 && c.G == 0 && c.B == 128 && strikethrough) return "invalid";
             }
         }
@@ -97,6 +101,16 @@ public static class ExcelService
         {
             if (cell.IsEmpty()) return null;
             return cell.GetDouble();
+        }
+        catch { return null; }
+    }
+
+    private static int? GetInt(IXLCell cell)
+    {
+        try
+        {
+            if (cell.IsEmpty()) return null;
+            return (int)cell.GetDouble();
         }
         catch { return null; }
     }

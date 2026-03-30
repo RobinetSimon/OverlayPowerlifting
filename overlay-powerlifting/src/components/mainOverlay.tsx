@@ -1,20 +1,19 @@
 'use client';
 import React, { useLayoutEffect, useRef } from 'react';
 import gsap from 'gsap';
+import { OverlaySettings, DEFAULT_OVERLAY_SETTINGS } from '../types/athlete';
 
-const AttemptBox = ({ weight, status }: { weight: number; status: string }) => {
-  const getAttemptClasses = () => {
-    if (status === 'good') {
-      return 'bg-green-500 text-white';
-    }
-    if (status === 'fail') {
-      return 'bg-red-600 text-white';
-    }
-    return 'text-white';
-  };
+const AttemptBox = ({ weight, status, settings }: { weight: number; status: string; settings: OverlaySettings }) => {
+  const bg =
+    status === 'good' ? settings.colors.validAttempt :
+    status === 'fail' ? settings.colors.invalidAttempt :
+    'transparent';
 
   return (
-    <div className={`card-box ${getAttemptClasses()} font-bold px-2 text-sm flex items-center justify-center min-w-[40px] h-[18px]`}>
+    <div
+      className="card-box font-bold px-2 text-sm flex items-center justify-center min-w-[40px] h-[18px]"
+      style={{ backgroundColor: bg, color: settings.colors.accent }}
+    >
       {weight}
     </div>
   );
@@ -25,23 +24,31 @@ interface Attempt {
   status: string;
 }
 
-interface LifterInfo {
-  name: string;
-  firstName: string;
-  category?: string;
-}
-
 interface PowerliftingOverlayProps {
   category: string;
-  rankInfo: string;
-  timer: string;
-  lifter: LifterInfo;
+  lifter: { name: string; firstName: string };
   attempts: Attempt[];
   total: number;
   competition: string;
   currentMovement: string;
+  glPoints?: number | null;
   visible: boolean;
+  settings?: OverlaySettings;
 }
+
+const positionClasses: Record<OverlaySettings['position'], string> = {
+  'bottom-left': 'bottom-4 left-4',
+  'bottom-right': 'bottom-4 right-4',
+  'top-left': 'top-4 left-4',
+  'top-right': 'top-4 right-4',
+};
+
+const transformOrigins: Record<OverlaySettings['position'], string> = {
+  'bottom-left': 'bottom left',
+  'bottom-right': 'bottom right',
+  'top-left': 'top left',
+  'top-right': 'top right',
+};
 
 export default function PowerliftingOverlay({
   category,
@@ -50,7 +57,9 @@ export default function PowerliftingOverlay({
   total,
   competition,
   currentMovement,
+  glPoints,
   visible,
+  settings = DEFAULT_OVERLAY_SETTINGS,
 }: PowerliftingOverlayProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
 
@@ -69,9 +78,7 @@ export default function PowerliftingOverlay({
     }
   }, [visible]);
 
-  if (!visible || !lifter || !Array.isArray(attempts)) {
-    return null;
-  }
+  if (!visible || !lifter || !Array.isArray(attempts)) return null;
 
   const formatMovement = (movement: string) => {
     switch (movement) {
@@ -82,54 +89,76 @@ export default function PowerliftingOverlay({
     }
   };
 
+  const s = settings;
+
   return (
-    <div ref={overlayRef} className="fixed bottom-4 left-4 z-50 flex flex-col gap-1">
-      <div className="row-1 flex h-8 text-white text-sm font-bold gap-1">
-        <div id="category-box" className="relative px-3 flex items-center bg-blue-900 clip-both-left">
-          {category}
-        </div>
-        <div id="movement-box" className="relative px-3 flex-1 flex items-center bg-blue-900 clip-both-right">
+    <div
+      ref={overlayRef}
+      className={`fixed ${positionClasses[s.position]} z-50 flex flex-col gap-1`}
+      style={{ transform: `scale(${s.scale})`, transformOrigin: transformOrigins[s.position] }}
+    >
+      {/* Row 1: Category + Movement */}
+      <div className="row-1 flex h-8 text-sm font-bold gap-1" style={{ color: s.colors.accent }}>
+        {s.visibility.weightCategory && (
+          <div id="category-box" className="relative px-3 flex items-center clip-both-left" style={{ backgroundColor: s.colors.primary }}>
+            {category}
+          </div>
+        )}
+        <div id="movement-box" className="relative px-3 flex-1 flex items-center clip-both-right" style={{ backgroundColor: s.colors.primary }}>
           {formatMovement(currentMovement)}
         </div>
       </div>
 
+      {/* Row 2: Lifter + Attempts + Total */}
       <div className="relative row-2">
-        <div id="lifter-bg" className="card-bg bg-blue-900 absolute inset-0 -z-10" />
+        <div id="lifter-bg" className="card-bg absolute inset-0 -z-10" style={{ backgroundColor: s.colors.primary }} />
         <div className="flex gap-1 p-0.5 items-center">
-          <div id="lifter-name" className="text-white font-bold text-lg ml-1">
+          {s.logoUrl && (
+            <img src={s.logoUrl} alt="" className="h-6 w-6 object-contain ml-1" />
+          )}
+          <div id="lifter-name" className="font-bold text-lg ml-1" style={{ color: s.colors.accent }}>
             {lifter.firstName} {lifter.name}
           </div>
 
-          {/* Rendu des 3 essais (avec placeholders si nécessaire) */}
           {[0, 1, 2].map(index => {
             const attempt = attempts[index];
             return (
               <div className="attempt-box-wrapper" key={index}>
                 {attempt && attempt.weight != null ? (
-                  <AttemptBox weight={attempt.weight} status={attempt.status} />
+                  <AttemptBox weight={attempt.weight} status={attempt.status} settings={s} />
                 ) : (
-                  // Placeholder pour les essais non encore définis
                   <div className="min-w-[40px] h-[18px]" />
                 )}
               </div>
             );
           })}
 
-          <div id="total-box" className="card-box bg-yellow-400 text-black font-bold px-2 text-md h-[18px] flex items-center justify-center">
-            {(total ?? 0).toFixed(1)}
-          </div>
+          {s.visibility.total && (
+            <div id="total-box" className="card-box font-bold px-2 text-md h-[18px] flex items-center justify-center"
+              style={{ backgroundColor: s.colors.secondary, color: '#000' }}>
+              {(total ?? 0).toFixed(1)}
+            </div>
+          )}
+
+          {s.visibility.glPoints && glPoints != null && (
+            <div className="card-box font-bold px-2 text-xs h-[18px] flex items-center justify-center bg-purple-600 text-white">
+              {glPoints.toFixed(2)} GL
+            </div>
+          )}
         </div>
       </div>
 
-      <div id="competition-row" className="relative row-3">
-        <div className="card-bg bg-blue-900 absolute inset-0 -z-10" />
-        <div className="flex items-center p-0.5">
-          <div className="card-box bg-blue-900 text-xs text-gray-300 px-2 py-0.5">
-            {competition}
+      {/* Row 3: Competition */}
+      {s.visibility.competition && (
+        <div id="competition-row" className="relative row-3">
+          <div className="card-bg absolute inset-0 -z-10" style={{ backgroundColor: s.colors.primary }} />
+          <div className="flex items-center p-0.5">
+            <div className="card-box text-xs px-2 py-0.5" style={{ backgroundColor: s.colors.primary, color: '#9ca3af' }}>
+              {competition}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
-

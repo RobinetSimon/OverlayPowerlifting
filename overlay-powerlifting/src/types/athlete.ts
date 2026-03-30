@@ -12,7 +12,11 @@ export type AthleteRaw = {
   sex: 'M' | 'F';
   category_age: string;
   weight_category: string;
+  bodyweight: number | null;
   total: number;
+  ipf_coefficient: number | null;
+  ranking: number | null;
+  gl_points: number | null;
   attempts: {
     squat: AttemptRaw[];
     bench_press: AttemptRaw[];
@@ -39,6 +43,70 @@ export type OverlayData = {
   total: number;
   competition: string;
   currentMovement: string;
-  isRecordAttempt?: boolean;
+  glPoints?: number | null;
 };
 
+export type OverlaySettings = {
+  colors: {
+    primary: string;
+    secondary: string;
+    accent: string;
+    validAttempt: string;
+    invalidAttempt: string;
+  };
+  position: 'bottom-left' | 'bottom-right' | 'top-left' | 'top-right';
+  scale: number;
+  visibility: {
+    glPoints: boolean;
+    ageCategory: boolean;
+    weightCategory: boolean;
+    club: boolean;
+    total: boolean;
+    competition: boolean;
+  };
+  logoUrl: string | null;
+};
+
+export type RankedAthlete = {
+  rank: number;
+  first_name: string;
+  last_name: string;
+  club: string;
+  weight_category: string;
+  total: number;
+  gl_points: number;
+};
+
+export type BrowseEntry = {
+  name: string;
+  path: string;
+  is_directory: boolean;
+  extension: string | null;
+};
+
+export type BrowseResponse = {
+  current_path: string;
+  parent_path: string | null;
+  entries: BrowseEntry[];
+};
+
+export const DEFAULT_OVERLAY_SETTINGS: OverlaySettings = {
+  colors: {
+    primary: '#1e3a5f',
+    secondary: '#eab308',
+    accent: '#ffffff',
+    validAttempt: '#22c55e',
+    invalidAttempt: '#dc2626',
+  },
+  position: 'bottom-left',
+  scale: 1.0,
+  visibility: {
+    glPoints: false,
+    ageCategory: true,
+    weightCategory: true,
+    club: false,
+    total: true,
+    competition: true,
+  },
+  logoUrl: null,
+};

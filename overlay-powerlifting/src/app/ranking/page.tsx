@@ -1,15 +1,14 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
-import PowerliftingOverlay from '../../components/mainOverlay';
-import { OverlayData, OverlaySettings, DEFAULT_OVERLAY_SETTINGS } from '../../types/athlete';
+import RankingOverlay from '../../components/rankingOverlay';
+import { RankedAthlete } from '../../types/athlete';
 import ErrorBoundary from '../../components/ErrorBoundary';
 
-export default function OverlayPage() {
-  const [athlete, setAthlete] = useState<OverlayData | null>(null);
+export default function RankingPage() {
+  const [athletes, setAthletes] = useState<RankedAthlete[]>([]);
   const [visible, setVisible] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
-  const [settings, setSettings] = useState<OverlaySettings>(DEFAULT_OVERLAY_SETTINGS);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -30,23 +29,19 @@ export default function OverlayPage() {
       const wsPort = process.env.NEXT_PUBLIC_API_PORT || '3000';
       const ws = new WebSocket(`ws://${hostname}:${wsPort}`);
 
-      ws.onopen = () => console.log('Overlay connected to WebSocket.');
+      ws.onopen = () => console.log('Ranking connected to WebSocket.');
 
       ws.onmessage = (event) => {
         try {
           const { type, data } = JSON.parse(event.data);
-
-          if (type === 'UPDATE_OVERLAY' && data) {
-            setAthlete(data);
+          if (type === 'UPDATE_RANKING' && Array.isArray(data)) {
+            setAthletes(data);
             setVisible(true);
 
             if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+
             const duration = parseInt(process.env.NEXT_PUBLIC_OVERLAY_DURATION_SECONDS || '10') * 1000;
             hideTimerRef.current = setTimeout(() => setVisible(false), duration);
-          }
-
-          if (type === 'OVERLAY_SETTINGS' && data) {
-            setSettings({ ...DEFAULT_OVERLAY_SETTINGS, ...data });
           }
         } catch (error) {
           console.error('WebSocket message error:', error);
@@ -79,13 +74,8 @@ export default function OverlayPage() {
     <div className="w-screen h-screen flex items-center justify-center overflow-hidden">
       <ErrorBoundary>
         <div className={`transition-opacity duration-500 ease-in-out ${visible ? 'opacity-100' : 'opacity-0'}`}>
-          {athlete && shouldRender && (
-            <PowerliftingOverlay
-              key={`${athlete.lifter.name}-${athlete.lifter.firstName}-${athlete.currentMovement}`}
-              {...athlete}
-              visible={true}
-              settings={settings}
-            />
+          {shouldRender && athletes.length > 0 && (
+            <RankingOverlay athletes={athletes} visible={true} />
           )}
         </div>
       </ErrorBoundary>

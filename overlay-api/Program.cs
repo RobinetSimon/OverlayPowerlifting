@@ -10,6 +10,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 builder.Services.AddCors();
+builder.Services.AddHttpClient();
 
 var port = Environment.GetEnvironmentVariable("API_PORT") ?? "3000";
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
@@ -37,7 +38,7 @@ app.Use(async (context, next) =>
 
     try
     {
-        var buffer = new byte[4096];
+        var buffer = new byte[64 * 1024];
         while (ws.State == WebSocketState.Open)
         {
             var result = await ws.ReceiveAsync(buffer, context.RequestAborted);
@@ -74,16 +75,16 @@ if (Directory.Exists(publicPath))
     });
 }
 
-// --- API ---
-app.MapGet("/getData", (string? excelPath, string? jsonPath) =>
+// --- API: Extract Excel data ---
+app.MapGet("/getData", (string? excelPath) =>
 {
-    if (string.IsNullOrWhiteSpace(excelPath) || string.IsNullOrWhiteSpace(jsonPath))
-        return Results.Json(new ErrorResponse("Paramètres excelPath et jsonPath requis"),
+    if (string.IsNullOrWhiteSpace(excelPath))
+        return Results.Json(new ErrorResponse("Paramètre excelPath requis"),
             AppJsonContext.Default.ErrorResponse, statusCode: 400);
 
     try
     {
-        var athletes = ExcelService.Extract(Path.GetFullPath(excelPath), Path.GetFullPath(jsonPath));
+        var athletes = ExcelService.Extract(Path.GetFullPath(excelPath));
         return Results.Json(athletes, AppJsonContext.Default.ListAthlete);
     }
     catch (Exception ex)
@@ -91,6 +92,113 @@ app.MapGet("/getData", (string? excelPath, string? jsonPath) =>
         Console.Error.WriteLine($"Excel extraction error: {ex.Message}");
         return Results.Json(new ErrorResponse(ex.Message),
             AppJsonContext.Default.ErrorResponse, statusCode: 500);
+    }
+});
+
+// --- API: File browser ---
+app.MapGet("/browse/drives", () =>
+{
+    try
+    {
+        var drives = DriveInfo.GetDrives()
+            .Where(d => d.IsReady)
+            .Select(d => new BrowseEntry(d.Name, d.RootDirectory.FullName, true, null))
+            .ToList();
+        return Results.Json(new BrowseResponse("", null, drives), AppJsonContext.Default.BrowseResponse);
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new ErrorResponse(ex.Message), AppJsonContext.Default.ErrorResponse, statusCode: 500);
+    }
+});
+
+app.MapGet("/browse", (string? path) =>
+{
+    if (string.IsNullOrWhiteSpace(path))
+        return Results.Json(new ErrorResponse("Paramètre path requis"),
+            AppJsonContext.Default.ErrorResponse, statusCode: 400);
+
+    try
+    {
+        var dir = new DirectoryInfo(Path.GetFullPath(path));
+        if (!dir.Exists)
+            return Results.Json(new ErrorResponse("Répertoire introuvable"),
+                AppJsonContext.Default.ErrorResponse, statusCode: 404);
+
+        var entries = new List<BrowseEntry>();
+
+        foreach (var d in dir.EnumerateDirectories().OrderBy(d => d.Name))
+        {
+            try { entries.Add(new BrowseEntry(d.Name, d.FullName, true, null)); }
+            catch { /* skip inaccessible */ }
+        }
+
+        var excelExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".xlsx", ".xlsm", ".xls" };
+        foreach (var f in dir.EnumerateFiles().Where(f => excelExtensions.Contains(f.Extension)).OrderBy(f => f.Name))
+        {
+            try { entries.Add(new BrowseEntry(f.Name, f.FullName, false, f.Extension)); }
+            catch { /* skip inaccessible */ }
+        }
+
+        return Results.Json(new BrowseResponse(dir.FullName, dir.Parent?.FullName, entries),
+            AppJsonContext.Default.BrowseResponse);
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new ErrorResponse(ex.Message), AppJsonContext.Default.ErrorResponse, statusCode: 500);
+    }
+});
+
+// --- API: Logo upload ---
+app.MapPost("/upload-logo", async (HttpContext context) =>
+{
+    try
+    {
+        var upload = await context.Request.ReadFromJsonAsync(AppJsonContext.Default.LogoUpload);
+        if (upload == null || string.IsNullOrWhiteSpace(upload.Data))
+            return Results.Json(new ErrorResponse("Données logo manquantes"),
+                AppJsonContext.Default.ErrorResponse, statusCode: 400);
+
+        var base64Data = upload.Data;
+        if (base64Data.Contains(','))
+            base64Data = base64Data[(base64Data.IndexOf(',') + 1)..];
+
+        var bytes = Convert.FromBase64String(base64Data);
+        var logoDir = Path.Combine(AppContext.BaseDirectory, "public", "images");
+        Directory.CreateDirectory(logoDir);
+        var logoPath = Path.Combine(logoDir, "custom-logo.png");
+        await File.WriteAllBytesAsync(logoPath, bytes);
+
+        return Results.Json(new UploadResponse("/images/custom-logo.png"), AppJsonContext.Default.UploadResponse);
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new ErrorResponse(ex.Message), AppJsonContext.Default.ErrorResponse, statusCode: 500);
+    }
+});
+
+// --- API: OpenPowerlifting ---
+app.MapGet("/openpowerlifting", async (string? firstName, string? lastName, IHttpClientFactory httpFactory) =>
+{
+    if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
+        return Results.Json(new ErrorResponse("Paramètres firstName et lastName requis"),
+            AppJsonContext.Default.ErrorResponse, statusCode: 400);
+
+    try
+    {
+        var http = httpFactory.CreateClient();
+        http.DefaultRequestHeaders.UserAgent.ParseAdd("OverlayPowerlifting/1.0");
+        var profile = await OpenPowerliftingService.FetchProfile(http, firstName, lastName);
+
+        if (profile == null)
+            return Results.Json(new ErrorResponse($"Profil non trouvé pour {firstName} {lastName}"),
+                AppJsonContext.Default.ErrorResponse, statusCode: 404);
+
+        return Results.Json(profile, AppJsonContext.Default.OpenPowerliftingProfile);
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new ErrorResponse(ex.Message), AppJsonContext.Default.ErrorResponse, statusCode: 500);
     }
 });
 
