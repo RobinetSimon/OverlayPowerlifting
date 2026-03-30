@@ -7,6 +7,11 @@
     <AssemblyName>overlay</AssemblyName>
     <PublishAot>true</PublishAot>
   </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="ressources/**/*" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="ClosedXML" Version="0.104.2" />
   </ItemGroup>
