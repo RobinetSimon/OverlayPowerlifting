@@ -12,6 +12,8 @@ overlay-powerlifting/out/
 # Build artifacts
 release/
 publish/
+overlay-api/ressources/
+overlay-api/out/
 *.exe
 
 # IDE
