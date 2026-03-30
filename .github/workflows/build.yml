@@ -1,0 +1,70 @@
+name: Build
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install frontend dependencies
+        working-directory: overlay-powerlifting
+        run: npm ci
+
+      - name: Lint frontend
+        working-directory: overlay-powerlifting
+        run: npm run lint
+
+      - name: Build frontend
+        working-directory: overlay-powerlifting
+        run: npm run build
+
+      - name: Restore backend
+        working-directory: overlay-api
+        run: dotnet restore
+
+      - name: Build backend
+        working-directory: overlay-api
+        run: dotnet build -c Release --no-restore
+
+      - name: Publish backend
+        working-directory: overlay-api
+        shell: bash
+        run: |
+          dotnet publish -c Release -r win-x64 -o ../publish 2>&1 && echo "Published with AOT" || {
+            echo "AOT failed, falling back to single-file publish"
+            dotnet publish -c Release -r win-x64 -o ../publish \
+              -p:PublishAot=false \
+              -p:PublishSingleFile=true \
+              -p:SelfContained=true \
+              -p:PublishTrimmed=true
+          }
+
+      - name: Assemble release
+        shell: bash
+        run: |
+          mkdir -p release
+          cp publish/overlay.exe release/overlay.exe
+          cp -r overlay-powerlifting/out release/public
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OverlayPowerlifting
+          path: release/

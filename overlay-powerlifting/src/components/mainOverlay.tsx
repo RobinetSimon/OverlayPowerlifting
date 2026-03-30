@@ -116,7 +116,7 @@ export default function PowerliftingOverlay({
           })}
 
           <div id="total-box" className="card-box bg-yellow-400 text-black font-bold px-2 text-md h-[18px] flex items-center justify-center">
-            {total.toFixed(1)}
+            {(total ?? 0).toFixed(1)}
           </div>
         </div>
       </div>

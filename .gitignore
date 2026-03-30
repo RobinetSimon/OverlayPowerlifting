@@ -1,0 +1,30 @@
+# .NET
+overlay-api/bin/
+overlay-api/obj/
+overlay-api/publish/
+
+# Node
+node_modules/
+overlay-powerlifting/node_modules/
+overlay-powerlifting/.next/
+overlay-powerlifting/out/
+
+# Build artifacts
+release/
+publish/
+*.exe
+
+# IDE
+.vs/
+.vscode/
+*.suo
+*.user
+
+# Environment
+.env
+.env.local
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
