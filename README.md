@@ -106,29 +106,65 @@ dotnet run           # http://localhost:3000
 
 ## Build & Déploiement
 
+### Script de build automatisé
+
 ```bash
-# 1. Build du frontend
+./build.bat
+```
+
+Ce script effectue les étapes suivantes :
+
+#### 1 : Build du frontend Next.js
+```bash
 cd overlay-powerlifting
 npm run build
+```
+Génère les fichiers statiques compilés et optimisés.
 
-# 2. Publish du backend (.exe autonome)
-cd overlay-api
-dotnet publish -c Release -r win-x64 -o ../release \
-  -p:PublishSingleFile=true -p:SelfContained=true -p:PublishTrimmed=true
-
-# 3. Copier le frontend dans le dossier release
-cp -r ../overlay-powerlifting/out ../release/public
+#### 2 : Nettoyage des ressources
+```bash
+rmdir /s /q overlay-api\ressources
+mkdir overlay-api\ressources
 ```
 
-Résultat :
+#### 3 : Copie du frontend compilé
+```bash
+xcopy /s /e /y overlay-powerlifting\out overlay-api\ressources
+```
+Les fichiers Next.js compilés sont copiés dans le dossier `ressources` du backend.
+
+#### 4 : Publish du backend avec Native AOT
+```bash
+dotnet publish -c Release -r win-x64 ^
+ -o out ^
+ -p:PublishSingleFile=true ^
+ -p:SelfContained=true ^
+ -p:PublishTrimmed=true ^
+ -p:EnableCompressionInSingleFile=true ^
+ -p:UseAppHost=true ^
+ -p:InvariantGlobalization=true ^
+ -p:PublishReadyToRun=true
+```
+
+**Paramètres d'optimisation :**
+- `PublishSingleFile=true` : Un seul fichier .exe
+- `SelfContained=true` : .NET 10 embarqué (autonome)
+- `PublishTrimmed=true` : Supprime le code inutilisé
+- `EnableCompressionInSingleFile=true` : Compression pour réduire la taille
+- `PublishReadyToRun=true` : Pré-compilation JIT
+
+### Résultat
 
 ```
-release/
-├── overlay.exe    # Serveur autonome (~27 MB)
-└── public/        # Frontend statique
+overlay-api/out/
+└── OverlayApi.exe        # Serveur autonome + frontend intégré (~30-40 MB)
 ```
 
-Double-cliquer `overlay.exe` lance le serveur sur `http://localhost:3000`.
+### Lancement
+
+Double-cliquer sur `OverlayApi.exe` → le serveur démarre automatiquement sur `http://localhost:3000`.
+
+Les fichiers frontend intégrés sont servis en tant que ressources statiques depuis le serveur ASP.NET Core.
 
 ## CI/CD
 

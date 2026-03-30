@@ -1,0 +1,29 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "overlay-api", "overlay-api", "{F4AFDAF6-3D70-5D74-34FE-A9DF4B3F6B6C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OverlayApi", "overlay-api\OverlayApi.csproj", "{BAF0F44E-61EC-CCA3-DA6F-54007889C0C7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BAF0F44E-61EC-CCA3-DA6F-54007889C0C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BAF0F44E-61EC-CCA3-DA6F-54007889C0C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BAF0F44E-61EC-CCA3-DA6F-54007889C0C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BAF0F44E-61EC-CCA3-DA6F-54007889C0C7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{BAF0F44E-61EC-CCA3-DA6F-54007889C0C7} = {F4AFDAF6-3D70-5D74-34FE-A9DF4B3F6B6C}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D3A99C18-2406-4AEE-9BE8-BE461BA06E62}
+	EndGlobalSection
+EndGlobal

@@ -1,4 +1,5 @@
 using System.Net.WebSockets;
+using System.Reflection;
 using Microsoft.Extensions.FileProviders;
 using OverlayApi;
 
@@ -62,18 +63,42 @@ app.Use(async (context, next) =>
     }
 });
 
+
+
 // --- Static files ---
-var publicPath = Path.Combine(AppContext.BaseDirectory, "public");
-if (Directory.Exists(publicPath))
+Assembly assembly = Assembly.GetExecutingAssembly();
+app.MapGet("/{**path}", async (HttpContext context) =>
 {
-    var provider = new PhysicalFileProvider(publicPath);
-    app.UseFileServer(new FileServerOptions
+    string path = context.Request.Path.Value?.TrimStart('/') ?? string.Empty;
+    if (string.IsNullOrEmpty(path))
+        path = "index.html";
+
+    // Try to directly query the file, or try to find the underlying index.html
+    Stream? stream = null;
+    string resourcePath = $"OverlayApi.ressources.{path.Replace("/", ".")}";
+    stream = assembly.GetManifestResourceStream(resourcePath);
+    if (stream == null)
     {
-        FileProvider = provider,
-        EnableDefaultFiles = true,
-        EnableDirectoryBrowsing = false
-    });
-}
+        string folderPath = path.TrimEnd('/');
+        resourcePath = $"OverlayApi.ressources.{folderPath.Replace("/", ".")}.index.html";
+        stream = assembly.GetManifestResourceStream(resourcePath);
+    }
+
+    // If no file has been found
+    if (stream == null)
+    {
+        context.Response.StatusCode = 404;
+        return;
+    }
+
+    context.Response.ContentType = 
+        resourcePath.EndsWith(".html") ? "text/html" :
+        resourcePath.EndsWith(".js") ? "application/javascript" :
+        resourcePath.EndsWith(".css") ? "text/css" :
+        "application/octet-stream";
+
+    await stream.CopyToAsync(context.Response.Body);
+});
 
 // --- API: Extract Excel data ---
 app.MapGet("/getData", (string? excelPath) =>
