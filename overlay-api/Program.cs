@@ -174,6 +174,42 @@ app.MapGet("/browse", (string? path) =>
     }
 });
 
+// --- API: Upload Excel file ---
+app.MapPost("/upload-excel", async (HttpContext context) =>
+{
+    try
+    {
+        if (!context.Request.HasFormContentType)
+            return Results.Json(new ErrorResponse("Content-Type doit être multipart/form-data"),
+                AppJsonContext.Default.ErrorResponse, statusCode: 400);
+
+        var form = await context.Request.ReadFormAsync();
+        var file = form.Files.GetFile("file");
+        if (file == null || file.Length == 0)
+            return Results.Json(new ErrorResponse("Fichier manquant"),
+                AppJsonContext.Default.ErrorResponse, statusCode: 400);
+
+        var uploadDir = Path.Combine(AppContext.BaseDirectory, "uploads");
+        Directory.CreateDirectory(uploadDir);
+        var savePath = Path.Combine(uploadDir, file.FileName);
+
+        await using (var stream = new FileStream(savePath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream);
+        }
+
+        var athletes = ExcelService.Extract(savePath);
+        return Results.Json(new UploadExcelResponse(savePath, athletes),
+            AppJsonContext.Default.UploadExcelResponse);
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Upload Excel error: {ex.Message}");
+        return Results.Json(new ErrorResponse(ex.Message),
+            AppJsonContext.Default.ErrorResponse, statusCode: 500);
+    }
+});
+
 // --- API: Logo upload ---
 app.MapPost("/upload-logo", async (HttpContext context) =>
 {

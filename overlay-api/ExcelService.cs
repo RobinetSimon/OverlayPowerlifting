@@ -39,10 +39,10 @@ public static class ExcelService
                     Squat: SquatCols.Select(c => MakeAttempt(wsRow.Cell(c))).ToList(),
                     BenchPress: BenchCols.Select(c => MakeAttempt(wsRow.Cell(c))).ToList(),
                     Deadlift: DeadliftCols.Select(c => MakeAttempt(wsRow.Cell(c))).ToList()),
-                Total: GetNumber(wsRow.Cell(21)),
+                Total: GetNumber(wsRow.Cell(22)),
                 IpfCoefficient: GetNumber(wsRow.Cell(10)),
-                Ranking: GetInt(wsRow.Cell(22)),
-                GlPoints: GetNumber(wsRow.Cell(23))
+                Ranking: GetInt(wsRow.Cell(23)),
+                GlPoints: GetNumber(wsRow.Cell(24))
             ));
         }
 
@@ -61,19 +61,32 @@ public static class ExcelService
     {
         try
         {
-            var bg = cell.Style.Fill.BackgroundColor;
+            if (cell.IsEmpty()) return "pending";
+
+            var fill = cell.Style.Fill;
             var strikethrough = cell.Style.Font.Strikethrough;
 
-            if (bg.ColorType == XLColorType.Indexed)
+            // If strikethrough is set, it's always an invalid attempt
+            if (strikethrough) return "invalid";
+
+            // Check if there is a solid fill (colored background)
+            if (fill.PatternType == XLFillPatternValues.Solid)
             {
-                if (bg.Indexed == 11) return "valid";
-                if (bg.Indexed == 31 && strikethrough) return "invalid";
-            }
-            else if (bg.ColorType == XLColorType.Color)
-            {
-                var c = bg.Color;
-                if (c.R == 0 && c.G == 255 && c.B == 0) return "valid";
-                if (c.R == 128 && c.G == 0 && c.B == 128 && strikethrough) return "invalid";
+                var bg = fill.BackgroundColor;
+
+                if (bg.ColorType == XLColorType.Indexed)
+                {
+                    if (bg.Indexed == 11) return "valid";   // green
+                    if (bg.Indexed == 31) return "invalid";  // purple/red
+                }
+                else if (bg.ColorType == XLColorType.Color)
+                {
+                    var c = bg.Color;
+                    // Green tones = valid
+                    if (c.G > 200 && c.R < 100 && c.B < 100) return "valid";
+                    // Red/purple tones = invalid
+                    if ((c.R > 150 && c.G < 50) || (c.R > 100 && c.B > 100 && c.G < 50)) return "invalid";
+                }
             }
         }
         catch { /* style not readable, treat as pending */ }

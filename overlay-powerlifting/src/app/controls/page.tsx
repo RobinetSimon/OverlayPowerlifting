@@ -2,8 +2,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { AthleteRaw, OverlayData, AttemptRaw, RankedAthlete } from '../../types/athlete';
 import LiftSelector from '../../components/liftSelector';
-import NextAthleteButton from '../../components/nextAthleteButton';
-import FileBrowser from '../../components/fileBrowser';
 import AthleteDetailCard from '../../components/athleteDetailCard';
 import OverlaySettingsPanel, { useOverlaySettings } from '../../components/overlaySettingsPanel';
 import OpenPowerliftingPanel from '../../components/openpowerliftingPanel';
@@ -19,7 +17,7 @@ export default function Controls() {
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [excelPath, setExcelPath] = useState(process.env.NEXT_PUBLIC_DEFAULT_EXCEL_PATH || '');
-  const [fileBrowserOpen, setFileBrowserOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [competitionName, setCompetitionName] = useState(process.env.NEXT_PUBLIC_DEFAULT_COMPETITION_NAME || 'COMPETITION');
@@ -27,7 +25,11 @@ export default function Controls() {
 
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'controls' | 'athletes' | 'settings' | 'openpowerlifting'>('controls');
+  const [activeTab, setActiveTab] = useState<'controls' | 'athletes' | 'settings'>('controls');
+
+  // OpenPowerlifting state
+  const [oplAutoFetch, setOplAutoFetch] = useState(true);
+  const prevAthleteKeyRef = useRef<string>('');
 
   const { settings, setSettings } = useOverlaySettings();
 
@@ -87,14 +89,12 @@ export default function Controls() {
     }
   }, []);
 
-  const sendAthleteData = useCallback((athleteIndex: number) => {
-    if (athletes.length === 0 || !athletes[athleteIndex]) return;
-    setCurrentIndex(athleteIndex);
-
+  const buildOverlayData = useCallback((athleteIndex: number): OverlayData | null => {
+    if (athletes.length === 0 || !athletes[athleteIndex]) return null;
     const a = athletes[athleteIndex];
-    const overlayData: OverlayData = {
+    return {
       category: a.weight_category,
-      rankInfo: `RANK ${athleteIndex + 1}`,
+      rankInfo: a.ranking ? `#${a.ranking}` : '',
       timer: '10:00',
       lifter: { flag: '', country: 'FRA', name: a.last_name, firstName: a.first_name },
       attempts: a.attempts[selectedLift].map((at: AttemptRaw) => ({
@@ -106,9 +106,25 @@ export default function Controls() {
       currentMovement: selectedLift,
       glPoints: a.gl_points,
     };
+  }, [athletes, selectedLift, competitionName]);
 
+  const sendAthleteData = useCallback((athleteIndex: number) => {
+    const overlayData = buildOverlayData(athleteIndex);
+    if (!overlayData) return;
+    setCurrentIndex(athleteIndex);
     sendWs({ type: 'UPDATE_OVERLAY', data: overlayData });
-  }, [athletes, selectedLift, competitionName, sendWs]);
+  }, [buildOverlayData, sendWs]);
+
+  // Replay animation for current athlete
+  const replayAnimation = useCallback(() => {
+    const overlayData = buildOverlayData(currentIndex);
+    if (!overlayData) return;
+    // Send a HIDE first to reset, then re-send after a short delay
+    sendWs({ type: 'HIDE_OVERLAY' });
+    setTimeout(() => {
+      sendWs({ type: 'UPDATE_OVERLAY', data: overlayData });
+    }, 300);
+  }, [buildOverlayData, currentIndex, sendWs]);
 
   const sendRanking = useCallback(() => {
     const ranked: RankedAthlete[] = athletes
@@ -135,6 +151,43 @@ export default function Controls() {
 
   const handleAthleteSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     sendAthleteData(parseInt(e.target.value, 10));
+  };
+
+  // File upload via native file dialog
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const apiPort = process.env.NEXT_PUBLIC_API_PORT || '3000';
+      const apiUrl = `http://${window.location.hostname}:${apiPort}`;
+      const response = await fetch(`${apiUrl}/upload-excel`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || `Erreur serveur : ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      setExcelPath(result.path);
+      setAthletes(result.athletes);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Erreur inconnue';
+      setError(`Erreur upload : ${message}`);
+    } finally {
+      setIsLoading(false);
+      // Reset input so same file can be re-selected
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   };
 
   const callApi = async (): Promise<boolean> => {
@@ -201,12 +254,20 @@ export default function Controls() {
     sendWs({ type: 'OVERLAY_SETTINGS', data: settings });
   };
 
+  // Auto-apply settings on change
+  useEffect(() => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      sendWs({ type: 'OVERLAY_SETTINGS', data: settings });
+    }
+  }, [settings, sendWs]);
+
   const tabs = [
     { id: 'controls' as const, label: 'Contrôles' },
     { id: 'athletes' as const, label: `Athlètes (${athletes.length})` },
     { id: 'settings' as const, label: 'Personnalisation' },
-    { id: 'openpowerlifting' as const, label: 'OpenPowerlifting' },
   ];
+
+  const currentAthlete = athletes[currentIndex];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 to-indigo-200 py-12 px-6 font-sans text-gray-800">
@@ -279,13 +340,29 @@ export default function Controls() {
                   >
                     {athletes.map((athlete, index) => (
                       <option key={`${athlete.first_name}-${index}`} value={index}>
-                        {athlete.first_name} {athlete.last_name}
+                        {athlete.first_name} {athlete.last_name} — {athlete.weight_category}
                       </option>
                     ))}
                   </select>
                 </div>
 
-                <NextAthleteButton onClick={nextAthlete} />
+                <div className="flex gap-2">
+                  <button
+                    onClick={nextAthlete}
+                    disabled={athletes.length === 0}
+                    className="bg-green-600 text-white font-bold px-4 py-3 rounded-xl shadow-lg transition hover:-translate-y-0.5 disabled:opacity-50 hover:bg-green-700"
+                  >
+                    Suivant
+                  </button>
+                  <button
+                    onClick={replayAnimation}
+                    disabled={athletes.length === 0}
+                    className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-4 py-3 rounded-xl shadow-lg transition hover:-translate-y-0.5 disabled:opacity-50"
+                    title="Relancer l'animation pour l'athlète en cours"
+                  >
+                    Relancer
+                  </button>
+                </div>
 
                 <button
                   onClick={sendRanking}
@@ -296,10 +373,21 @@ export default function Controls() {
                 </button>
               </div>
 
-              {athletes[currentIndex] && (
-                <AthleteDetailCard athlete={athletes[currentIndex]} isSelected />
+              {currentAthlete && (
+                <AthleteDetailCard athlete={currentAthlete} isSelected />
               )}
             </section>
+
+            {/* OpenPowerlifting inline section */}
+            {currentAthlete && (
+              <OpenPowerliftingPanel
+                firstName={currentAthlete.first_name}
+                lastName={currentAthlete.last_name}
+                autoFetch={oplAutoFetch}
+                onAutoFetchChange={setOplAutoFetch}
+                prevAthleteKeyRef={prevAthleteKeyRef}
+              />
+            )}
 
             <section className="space-y-6 p-6 bg-indigo-50 rounded-2xl shadow-inner">
               <h2 className="text-2xl font-bold border-b pb-3">Configuration</h2>
@@ -314,11 +402,18 @@ export default function Controls() {
                       placeholder="Chemin vers le fichier Excel..."
                     />
                     <button
-                      onClick={() => setFileBrowserOpen(true)}
+                      onClick={() => fileInputRef.current?.click()}
                       className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-xl font-semibold text-sm transition"
                     >
                       Parcourir
                     </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".xlsx,.xlsm,.xls"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
                   </div>
                 </div>
 
@@ -379,25 +474,7 @@ export default function Controls() {
         {activeTab === 'settings' && (
           <OverlaySettingsPanel settings={settings} onChange={setSettings} onApply={applySettings} />
         )}
-
-        {/* Tab: OpenPowerlifting */}
-        {activeTab === 'openpowerlifting' && athletes[currentIndex] && (
-          <OpenPowerliftingPanel
-            firstName={athletes[currentIndex].first_name}
-            lastName={athletes[currentIndex].last_name}
-          />
-        )}
-
-        {activeTab === 'openpowerlifting' && !athletes[currentIndex] && (
-          <p className="text-center text-gray-500 py-8">Sélectionnez un athlète pour rechercher son profil.</p>
-        )}
       </div>
-
-      <FileBrowser
-        open={fileBrowserOpen}
-        onClose={() => setFileBrowserOpen(false)}
-        onSelect={(path) => setExcelPath(path)}
-      />
     </div>
   );
 }

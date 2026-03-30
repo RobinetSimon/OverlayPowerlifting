@@ -47,6 +47,10 @@ public record LogoUpload(
 public record UploadResponse(
     [property: JsonPropertyName("url")] string Url);
 
+public record UploadExcelResponse(
+    [property: JsonPropertyName("path")] string Path,
+    [property: JsonPropertyName("athletes")] List<Athlete> Athletes);
+
 // --- OpenPowerlifting ---
 public record PersonalBests(
     [property: JsonPropertyName("best_squat")] double? BestSquat,
@@ -80,5 +84,6 @@ public record OpenPowerliftingProfile(
 [JsonSerializable(typeof(BrowseResponse))]
 [JsonSerializable(typeof(LogoUpload))]
 [JsonSerializable(typeof(UploadResponse))]
+[JsonSerializable(typeof(UploadExcelResponse))]
 [JsonSerializable(typeof(OpenPowerliftingProfile))]
 internal partial class AppJsonContext : JsonSerializerContext;

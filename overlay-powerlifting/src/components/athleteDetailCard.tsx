@@ -24,7 +24,7 @@ function AttemptCell({ weight, status }: { weight: number | null; status: string
 }
 
 export default function AthleteDetailCard({ athlete, isSelected, onSelect }: Props) {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(isSelected ?? false);
 
   const bestAttempt = (attempts: { weight: number; status: string }[]) => {
     const valid = attempts.filter(a => a.status === 'valid' && a.weight != null);

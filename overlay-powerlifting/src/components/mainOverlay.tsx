@@ -69,14 +69,18 @@ export default function PowerliftingOverlay({
         const tl = gsap.timeline();
         tl.from(['#category-box', '#movement-box'], { scaleX: 0, opacity: 0, duration: 0.6, ease: 'power3.out', stagger: 0.1 });
         tl.from('#lifter-bg', { x: -50, opacity: 0, duration: 0.5, ease: 'power2.out' }, "-=0.4");
-        tl.from('#lifter-name', { x: -20, opacity: 0, duration: 0.5, ease: 'power2.out' }, "-=0.3");
-        tl.from('.attempt-box-wrapper', { scale: 0.5, opacity: 0, duration: 0.3, stagger: 0.1 }, "-=0.3");
+        // Animate all children of the lifter row together (including logo)
+        tl.from('#lifter-content > *', { x: -20, opacity: 0, duration: 0.4, stagger: 0.05, ease: 'power2.out' }, "-=0.3");
+        tl.from('.attempt-box-wrapper', { scale: 0.5, opacity: 0, duration: 0.3, stagger: 0.1 }, "-=0.2");
         tl.from('#total-box', { scale: 0.5, opacity: 0, duration: 0.5, ease: 'back.out(1.7)' });
+        if (glPoints != null) {
+          tl.from('#gl-box', { scale: 0.5, opacity: 0, duration: 0.4, ease: 'back.out(1.7)' }, "-=0.3");
+        }
         tl.from('#competition-row', { y: 20, opacity: 0, duration: 0.6, ease: 'power2.out' }, "-=0.4");
       }, overlayRef);
       return () => ctx.revert();
     }
-  }, [visible]);
+  }, [visible, glPoints]);
 
   if (!visible || !lifter || !Array.isArray(attempts)) return null;
 
@@ -112,11 +116,11 @@ export default function PowerliftingOverlay({
       {/* Row 2: Lifter + Attempts + Total */}
       <div className="relative row-2">
         <div id="lifter-bg" className="card-bg absolute inset-0 -z-10" style={{ backgroundColor: s.colors.primary }} />
-        <div className="flex gap-1 p-0.5 items-center">
+        <div id="lifter-content" className="flex gap-1 p-0.5 items-center">
           {s.logoUrl && (
             <img src={s.logoUrl} alt="" className="h-6 w-6 object-contain ml-1" />
           )}
-          <div id="lifter-name" className="font-bold text-lg ml-1" style={{ color: s.colors.accent }}>
+          <div className="font-bold text-lg ml-1" style={{ color: s.colors.accent }}>
             {lifter.firstName} {lifter.name}
           </div>
 
@@ -141,7 +145,7 @@ export default function PowerliftingOverlay({
           )}
 
           {s.visibility.glPoints && glPoints != null && (
-            <div className="card-box font-bold px-2 text-xs h-[18px] flex items-center justify-center bg-purple-600 text-white">
+            <div id="gl-box" className="card-box font-bold px-2 text-xs h-[18px] flex items-center justify-center bg-purple-600 text-white">
               {glPoints.toFixed(2)} GL
             </div>
           )}

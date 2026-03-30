@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, MutableRefObject } from 'react';
 
 type PersonalBests = {
   best_squat: number | null;
@@ -34,18 +34,21 @@ type Profile = {
 type Props = {
   firstName: string;
   lastName: string;
+  autoFetch: boolean;
+  onAutoFetchChange: (v: boolean) => void;
+  prevAthleteKeyRef: MutableRefObject<string>;
 };
 
-export default function OpenPowerliftingPanel({ firstName, lastName }: Props) {
+export default function OpenPowerliftingPanel({ firstName, lastName, autoFetch, onAutoFetchChange, prevAthleteKeyRef }: Props) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [manualUrl, setManualUrl] = useState('');
+  const [expanded, setExpanded] = useState(false);
 
-  const search = async (overrideFirstName?: string, overrideLastName?: string) => {
-    const fn = overrideFirstName ?? firstName;
-    const ln = overrideLastName ?? lastName;
-    if (!fn || !ln) return;
+  const athleteKey = `${firstName}-${lastName}`;
+
+  const search = useCallback(async () => {
+    if (!firstName || !lastName) return;
 
     setLoading(true);
     setError(null);
@@ -54,11 +57,11 @@ export default function OpenPowerliftingPanel({ firstName, lastName }: Props) {
     try {
       const apiPort = process.env.NEXT_PUBLIC_API_PORT || '3000';
       const apiUrl = `http://${window.location.hostname}:${apiPort}`;
-      const params = new URLSearchParams({ firstName: fn, lastName: ln });
+      const params = new URLSearchParams({ firstName, lastName });
       const res = await fetch(`${apiUrl}/openpowerlifting?${params}`);
 
       if (res.status === 404) {
-        setError(`Profil non trouvé pour "${fn} ${ln}". Essayez de saisir l'URL manuellement.`);
+        setError(`Profil non trouvé pour "${firstName} ${lastName}".`);
         return;
       }
 
@@ -74,110 +77,130 @@ export default function OpenPowerliftingPanel({ firstName, lastName }: Props) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [firstName, lastName]);
 
-  function PrCard({ label, value }: { label: string; value: number | null | undefined }) {
+  // Auto-fetch when athlete changes
+  useEffect(() => {
+    if (autoFetch && athleteKey !== prevAthleteKeyRef.current) {
+      prevAthleteKeyRef.current = athleteKey;
+      search();
+    }
+  }, [athleteKey, autoFetch, search, prevAthleteKeyRef]);
+
+  function PrCard({ label, value, unit }: { label: string; value: number | null | undefined; unit?: string }) {
     return (
       <div className="bg-white rounded-lg p-3 text-center shadow-sm border">
         <div className="text-xs text-gray-500 uppercase">{label}</div>
-        <div className="text-lg font-bold text-gray-800">{value != null ? `${value} kg` : '-'}</div>
+        <div className="text-lg font-bold text-gray-800">{value != null ? `${value}${unit ? ` ${unit}` : ''}` : '-'}</div>
       </div>
     );
   }
 
   return (
-    <section className="space-y-4 p-6 bg-orange-50 rounded-2xl shadow-inner border border-orange-100">
-      <h2 className="text-2xl font-bold border-b pb-3 mb-4">OpenPowerlifting</h2>
-
-      <div className="flex flex-col sm:flex-row gap-3">
+    <section className="p-4 bg-orange-50 rounded-2xl shadow-inner border border-orange-100">
+      <div className="flex items-center justify-between mb-3">
         <button
-          onClick={() => search()}
-          disabled={loading || !firstName || !lastName}
-          className="bg-gradient-to-r from-orange-500 to-amber-600 text-white font-bold px-6 py-2 rounded-xl shadow-lg hover:-translate-y-0.5 transition disabled:opacity-50"
+          onClick={() => setExpanded(!expanded)}
+          className="flex items-center gap-2 text-lg font-bold text-gray-800"
         >
-          {loading ? 'Recherche...' : `Rechercher ${firstName} ${lastName}`}
+          <span className={`transition-transform text-sm ${expanded ? 'rotate-180' : ''}`}>&#9660;</span>
+          OpenPowerlifting — {firstName} {lastName}
+          {loading && <span className="text-sm font-normal text-orange-500 ml-2">Recherche...</span>}
+          {profile && !loading && <span className="text-sm font-normal text-green-600 ml-2">({profile.competition_count} compétitions)</span>}
+          {error && !loading && <span className="text-sm font-normal text-red-500 ml-2">Non trouvé</span>}
         </button>
-      </div>
 
-      {/* Manual URL fallback */}
-      <div className="flex gap-2 items-end">
-        <div className="flex-1">
-          <label className="block text-xs text-gray-500 mb-1">URL manuelle (si non trouvé)</label>
-          <input
-            type="text"
-            value={manualUrl}
-            onChange={(e) => setManualUrl(e.target.value)}
-            placeholder="https://www.openpowerlifting.org/u/..."
-            className="w-full p-2 border rounded-lg text-sm"
-          />
+        <div className="flex items-center gap-3">
+          <label className="flex items-center gap-1.5 cursor-pointer text-sm">
+            <input
+              type="checkbox"
+              checked={autoFetch}
+              onChange={(e) => onAutoFetchChange(e.target.checked)}
+              className="w-4 h-4 rounded"
+            />
+            Auto
+          </label>
+          <button
+            onClick={search}
+            disabled={loading || !firstName || !lastName}
+            className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-3 py-1.5 rounded-lg text-sm transition disabled:opacity-50"
+          >
+            {loading ? '...' : 'Rechercher'}
+          </button>
         </div>
       </div>
 
-      {error && (
-        <div className="bg-orange-100 border-l-4 border-orange-400 text-orange-700 p-3 rounded text-sm">
-          {error}
-        </div>
-      )}
-
-      {profile && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <span className="font-bold text-gray-800">{profile.name}</span>
-            <a href={profile.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 text-sm hover:underline">
-              Voir sur OpenPowerlifting
-            </a>
-            <span className="text-sm text-gray-500">({profile.competition_count} compétitions)</span>
-          </div>
-
-          {/* Personal Bests */}
-          {profile.personal_bests && (
-            <div>
-              <h3 className="text-sm font-semibold text-gray-600 uppercase mb-2">Records personnels</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                <PrCard label="Squat" value={profile.personal_bests.best_squat} />
-                <PrCard label="Bench" value={profile.personal_bests.best_bench} />
-                <PrCard label="Deadlift" value={profile.personal_bests.best_deadlift} />
-                <PrCard label="Total" value={profile.personal_bests.best_total} />
-                <PrCard label="DOTS" value={profile.personal_bests.best_dots} />
-              </div>
+      {expanded && (
+        <div className="space-y-3">
+          {error && (
+            <div className="bg-orange-100 border-l-4 border-orange-400 text-orange-700 p-3 rounded text-sm">
+              {error}
             </div>
           )}
 
-          {/* Competition History */}
-          {profile.competitions.length > 0 && (
-            <div>
-              <h3 className="text-sm font-semibold text-gray-600 uppercase mb-2">Historique ({profile.competitions.length})</h3>
-              <div className="max-h-[300px] overflow-y-auto rounded-lg border">
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-100 sticky top-0">
-                    <tr>
-                      <th className="text-left p-2">Date</th>
-                      <th className="text-left p-2">Compétition</th>
-                      <th className="text-right p-2">Place</th>
-                      <th className="text-right p-2">SQ</th>
-                      <th className="text-right p-2">BP</th>
-                      <th className="text-right p-2">DL</th>
-                      <th className="text-right p-2">Total</th>
-                      <th className="text-right p-2">DOTS</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {profile.competitions.map((c, i) => (
-                      <tr key={i} className="border-t hover:bg-gray-50">
-                        <td className="p-2 whitespace-nowrap">{c.date ?? '-'}</td>
-                        <td className="p-2 truncate max-w-[200px]">{c.meet_name ?? '-'}</td>
-                        <td className="p-2 text-right">{c.place ?? '-'}</td>
-                        <td className="p-2 text-right">{c.squat ?? '-'}</td>
-                        <td className="p-2 text-right">{c.bench ?? '-'}</td>
-                        <td className="p-2 text-right">{c.deadlift ?? '-'}</td>
-                        <td className="p-2 text-right font-semibold">{c.total ?? '-'}</td>
-                        <td className="p-2 text-right">{c.dots ?? '-'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          {profile && (
+            <>
+              <div className="flex items-center gap-3 text-sm">
+                <a href={profile.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                  Voir sur OpenPowerlifting
+                </a>
               </div>
-            </div>
+
+              {/* Personal Bests */}
+              {profile.personal_bests && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-600 uppercase mb-2">Records personnels</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                    <PrCard label="Squat" value={profile.personal_bests.best_squat} unit="kg" />
+                    <PrCard label="Bench" value={profile.personal_bests.best_bench} unit="kg" />
+                    <PrCard label="Deadlift" value={profile.personal_bests.best_deadlift} unit="kg" />
+                    <PrCard label="Total" value={profile.personal_bests.best_total} unit="kg" />
+                    <PrCard label="DOTS" value={profile.personal_bests.best_dots} />
+                  </div>
+                </div>
+              )}
+
+              {/* Competition History */}
+              {profile.competitions.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-600 uppercase mb-2">Historique</h3>
+                  <div className="max-h-[250px] overflow-y-auto rounded-lg border">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-100 sticky top-0">
+                        <tr>
+                          <th className="text-left p-2">Date</th>
+                          <th className="text-left p-2">Compétition</th>
+                          <th className="text-right p-2">Place</th>
+                          <th className="text-right p-2">SQ</th>
+                          <th className="text-right p-2">BP</th>
+                          <th className="text-right p-2">DL</th>
+                          <th className="text-right p-2">Total</th>
+                          <th className="text-right p-2">DOTS</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {profile.competitions.map((c, i) => (
+                          <tr key={i} className="border-t hover:bg-gray-50">
+                            <td className="p-2 whitespace-nowrap">{c.date ?? '-'}</td>
+                            <td className="p-2 truncate max-w-[200px]">{c.meet_name ?? '-'}</td>
+                            <td className="p-2 text-right">{c.place ?? '-'}</td>
+                            <td className="p-2 text-right">{c.squat ?? '-'}</td>
+                            <td className="p-2 text-right">{c.bench ?? '-'}</td>
+                            <td className="p-2 text-right">{c.deadlift ?? '-'}</td>
+                            <td className="p-2 text-right font-semibold">{c.total ?? '-'}</td>
+                            <td className="p-2 text-right">{c.dots ?? '-'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {!profile && !error && !loading && (
+            <p className="text-gray-400 text-sm text-center py-2">Cliquez sur Rechercher ou activez Auto.</p>
           )}
         </div>
       )}

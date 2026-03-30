@@ -2,13 +2,15 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import RankingOverlay from '../../components/rankingOverlay';
-import { RankedAthlete } from '../../types/athlete';
+import { RankedAthlete, OverlaySettings, DEFAULT_OVERLAY_SETTINGS } from '../../types/athlete';
 import ErrorBoundary from '../../components/ErrorBoundary';
 
 export default function RankingPage() {
   const [athletes, setAthletes] = useState<RankedAthlete[]>([]);
   const [visible, setVisible] = useState(false);
   const [shouldRender, setShouldRender] = useState(false);
+  const [settings, setSettings] = useState<OverlaySettings>(DEFAULT_OVERLAY_SETTINGS);
+  const [animKey, setAnimKey] = useState(0);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -37,11 +39,20 @@ export default function RankingPage() {
           if (type === 'UPDATE_RANKING' && Array.isArray(data)) {
             setAthletes(data);
             setVisible(true);
+            setAnimKey(k => k + 1);
 
             if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
-
             const duration = parseInt(process.env.NEXT_PUBLIC_OVERLAY_DURATION_SECONDS || '10') * 1000;
             hideTimerRef.current = setTimeout(() => setVisible(false), duration);
+          }
+
+          if (type === 'OVERLAY_SETTINGS' && data) {
+            setSettings({
+              ...DEFAULT_OVERLAY_SETTINGS,
+              ...data,
+              colors: { ...DEFAULT_OVERLAY_SETTINGS.colors, ...data.colors },
+              visibility: { ...DEFAULT_OVERLAY_SETTINGS.visibility, ...data.visibility },
+            });
           }
         } catch (error) {
           console.error('WebSocket message error:', error);
@@ -75,7 +86,7 @@ export default function RankingPage() {
       <ErrorBoundary>
         <div className={`transition-opacity duration-500 ease-in-out ${visible ? 'opacity-100' : 'opacity-0'}`}>
           {shouldRender && athletes.length > 0 && (
-            <RankingOverlay athletes={athletes} visible={true} />
+            <RankingOverlay key={animKey} athletes={athletes} visible={true} settings={settings} />
           )}
         </div>
       </ErrorBoundary>

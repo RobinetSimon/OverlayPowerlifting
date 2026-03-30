@@ -1,14 +1,15 @@
 'use client';
 import React, { useLayoutEffect, useRef } from 'react';
 import gsap from 'gsap';
-import { RankedAthlete } from '../types/athlete';
+import { RankedAthlete, OverlaySettings, DEFAULT_OVERLAY_SETTINGS } from '../types/athlete';
 
 type Props = {
   athletes: RankedAthlete[];
   visible: boolean;
+  settings?: OverlaySettings;
 };
 
-export default function RankingOverlay({ athletes, visible }: Props) {
+export default function RankingOverlay({ athletes, visible, settings = DEFAULT_OVERLAY_SETTINGS }: Props) {
   const ref = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -24,17 +25,23 @@ export default function RankingOverlay({ athletes, visible }: Props) {
 
   if (!visible || athletes.length === 0) return null;
 
+  const s = settings;
+
   return (
-    <div ref={ref} className="fixed bottom-4 left-4 z-50 flex flex-col gap-1 min-w-[500px]">
-      <div id="ranking-header" className="card-box bg-blue-900 text-white font-bold text-sm px-4 py-2">
+    <div ref={ref} className={`fixed bottom-4 left-4 z-50 flex flex-col gap-1 min-w-[500px]`}>
+      <div
+        id="ranking-header"
+        className="card-box font-bold text-sm px-4 py-2"
+        style={{ backgroundColor: s.colors.primary, color: s.colors.accent }}
+      >
         CLASSEMENT GL POINTS
       </div>
 
       <div className="space-y-0.5">
         {athletes.map((a) => (
           <div key={a.rank} className="ranking-row relative">
-            <div className="card-bg bg-blue-900 absolute inset-0 -z-10" />
-            <div className="flex items-center gap-2 px-2 py-1.5 text-white text-sm">
+            <div className="card-bg absolute inset-0 -z-10" style={{ backgroundColor: s.colors.primary }} />
+            <div className="flex items-center gap-2 px-2 py-1.5 text-sm" style={{ color: s.colors.accent }}>
               <span className={`font-bold text-lg min-w-[28px] text-center ${
                 a.rank === 1 ? 'text-yellow-400' : a.rank === 2 ? 'text-gray-300' : a.rank === 3 ? 'text-amber-600' : ''
               }`}>
@@ -43,7 +50,10 @@ export default function RankingOverlay({ athletes, visible }: Props) {
               <span className="font-bold flex-1">{a.first_name} {a.last_name}</span>
               <span className="text-xs text-gray-300 min-w-[60px]">{a.weight_category}</span>
               <span className="font-semibold min-w-[70px] text-right">{a.total.toFixed(1)} kg</span>
-              <div className="card-box bg-yellow-400 text-black font-bold px-2 py-0.5 text-sm min-w-[80px] text-center">
+              <div
+                className="card-box font-bold px-2 py-0.5 text-sm min-w-[80px] text-center"
+                style={{ backgroundColor: s.colors.secondary, color: '#000' }}
+              >
                 {a.gl_points.toFixed(2)}
               </div>
             </div>
