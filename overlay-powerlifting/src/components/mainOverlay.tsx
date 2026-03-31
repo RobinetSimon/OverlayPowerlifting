@@ -26,6 +26,7 @@ interface Attempt {
 
 interface PowerliftingOverlayProps {
   category: string;
+  ageCategory?: string;
   lifter: { name: string; firstName: string };
   attempts: Attempt[];
   total: number;
@@ -52,6 +53,7 @@ const transformOrigins: Record<OverlaySettings['position'], string> = {
 
 export default function PowerliftingOverlay({
   category,
+  ageCategory,
   lifter,
   attempts,
   total,
@@ -66,19 +68,21 @@ export default function PowerliftingOverlay({
   useLayoutEffect(() => {
     if (!visible || !overlayRef.current) return;
 
+    // Simple slide-in animation: the whole overlay slides from the left and fades in
     const tl = gsap.timeline();
-    tl.fromTo(['#category-box', '#movement-box'], { scaleX: 0, opacity: 0 }, { scaleX: 1, opacity: 1, duration: 0.6, ease: 'power3.out', stagger: 0.1 });
-    tl.fromTo('#lifter-bg', { x: -50, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, ease: 'power2.out' }, "-=0.4");
-    tl.fromTo('#lifter-content > *', { x: -20, opacity: 0 }, { x: 0, opacity: 1, duration: 0.4, stagger: 0.05, ease: 'power2.out' }, "-=0.3");
-    tl.fromTo('.attempt-box-wrapper', { scale: 0.5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, stagger: 0.1 }, "-=0.2");
-    tl.fromTo('#total-box', { scale: 0.5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(1.7)' });
-    if (glPoints != null) {
-      tl.fromTo('#gl-box', { scale: 0.5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4, ease: 'back.out(1.7)' }, "-=0.3");
-    }
-    tl.fromTo('#competition-row', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'power2.out' }, "-=0.4");
+    tl.fromTo(overlayRef.current,
+      { x: -60, opacity: 0 },
+      { x: 0, opacity: 1, duration: 0.6, ease: 'power2.out' }
+    );
+    // Then each row fades in with a small stagger
+    tl.fromTo('.overlay-row',
+      { x: -30, opacity: 0 },
+      { x: 0, opacity: 1, duration: 0.4, stagger: 0.1, ease: 'power2.out' },
+      '-=0.3'
+    );
 
     return () => { tl.kill(); };
-  }, [visible, glPoints]);
+  }, [visible]);
 
   if (!visible || !lifter || !Array.isArray(attempts)) return null;
 
@@ -99,22 +103,27 @@ export default function PowerliftingOverlay({
       className={`fixed ${positionClasses[s.position]} z-50 flex flex-col gap-1`}
       style={{ transform: `scale(${s.scale})`, transformOrigin: transformOrigins[s.position] }}
     >
-      {/* Row 1: Category + Movement */}
-      <div className="row-1 flex h-8 text-sm font-bold gap-1" style={{ color: s.colors.accent }}>
+      {/* Row 1: Category + Age Category + Movement */}
+      <div className="overlay-row row-1 flex h-8 text-sm font-bold gap-1" style={{ color: s.colors.accent }}>
         {s.visibility.weightCategory && (
-          <div id="category-box" className="relative px-3 flex items-center clip-both-left" style={{ backgroundColor: s.colors.primary }}>
+          <div className="relative px-3 flex items-center clip-both-left" style={{ backgroundColor: s.colors.primary }}>
             {category}
           </div>
         )}
-        <div id="movement-box" className="relative px-3 flex-1 flex items-center clip-both-right" style={{ backgroundColor: s.colors.primary }}>
+        {s.visibility.ageCategory && ageCategory && (
+          <div className="relative px-3 flex items-center" style={{ backgroundColor: s.colors.primary }}>
+            {ageCategory}
+          </div>
+        )}
+        <div className="relative px-3 flex-1 flex items-center clip-both-right" style={{ backgroundColor: s.colors.primary }}>
           {formatMovement(currentMovement)}
         </div>
       </div>
 
-      {/* Row 2: Lifter + Attempts + Total */}
-      <div className="relative row-2">
-        <div id="lifter-bg" className="card-bg absolute inset-0 -z-10" style={{ backgroundColor: s.colors.primary }} />
-        <div id="lifter-content" className="flex gap-1 p-0.5 items-center">
+      {/* Row 2: Lifter + Attempts + Total + GL */}
+      <div className="overlay-row relative row-2">
+        <div className="card-bg absolute inset-0 -z-10" style={{ backgroundColor: s.colors.primary }} />
+        <div className="flex gap-1 p-0.5 items-center">
           <div className="font-bold text-lg ml-1" style={{ color: s.colors.accent }}>
             {lifter.firstName} {lifter.name}
           </div>
@@ -122,7 +131,7 @@ export default function PowerliftingOverlay({
           {[0, 1, 2].map(index => {
             const attempt = attempts[index];
             return (
-              <div className="attempt-box-wrapper" key={index}>
+              <div key={index}>
                 {attempt && attempt.weight != null ? (
                   <AttemptBox weight={attempt.weight} status={attempt.status} settings={s} />
                 ) : (
@@ -133,14 +142,14 @@ export default function PowerliftingOverlay({
           })}
 
           {s.visibility.total && (
-            <div id="total-box" className="card-box font-bold px-2 text-md h-[18px] flex items-center justify-center"
+            <div className="card-box font-bold px-2 text-md h-[18px] flex items-center justify-center"
               style={{ backgroundColor: s.colors.secondary, color: '#000' }}>
               {(total ?? 0).toFixed(1)}
             </div>
           )}
 
           {s.visibility.glPoints && glPoints != null && (
-            <div id="gl-box" className="card-box font-bold px-2 text-xs h-[18px] flex items-center justify-center bg-purple-600 text-white">
+            <div className="card-box font-bold px-2 text-xs h-[18px] flex items-center justify-center bg-purple-600 text-white">
               {glPoints.toFixed(2)} GL
             </div>
           )}
@@ -149,7 +158,7 @@ export default function PowerliftingOverlay({
 
       {/* Row 3: Competition + Logo */}
       {s.visibility.competition && (
-        <div id="competition-row" className="relative row-3">
+        <div className="overlay-row relative row-3">
           <div className="card-bg absolute inset-0 -z-10" style={{ backgroundColor: s.colors.primary }} />
           <div className="flex items-center p-0.5">
             <div className="card-box text-xs px-2 py-0.5 flex items-center gap-1" style={{ backgroundColor: s.colors.primary, color: '#9ca3af' }}>

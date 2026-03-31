@@ -31,6 +31,7 @@ export type OverlayAttempt = {
 
 export type OverlayData = {
   category: string;
+  ageCategory: string;
   rankInfo: string;
   timer: string;
   lifter: {

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using ClosedXML.Excel;
 
@@ -63,6 +64,11 @@ public static class ExcelService
         {
             if (cell.IsEmpty()) return "pending";
 
+            // Also check if the cell has no meaningful value
+            var numVal = GetNumber(cell);
+            if (numVal == null && string.IsNullOrWhiteSpace(GetText(cell)))
+                return "pending";
+
             var fill = cell.Style.Fill;
             var strikethrough = cell.Style.Font.Strikethrough;
 
@@ -84,10 +90,15 @@ public static class ExcelService
                     var c = bg.Color;
                     // Green tones = valid
                     if (c.G > 200 && c.R < 100 && c.B < 100) return "valid";
+                    if (c.G > 150 && c.R < 100) return "valid";
                     // Red/purple tones = invalid
                     if ((c.R > 150 && c.G < 50) || (c.R > 100 && c.B > 100 && c.G < 50)) return "invalid";
                 }
             }
+
+            // If we have a value but no color indicators, treat as valid (number entered = attempt done)
+            if (numVal.HasValue && numVal.Value > 0)
+                return "valid";
         }
         catch { /* style not readable, treat as pending */ }
 
@@ -99,6 +110,14 @@ public static class ExcelService
         try
         {
             if (cell.IsEmpty()) return null;
+            if (cell.HasFormula)
+            {
+                var cached = cell.CachedValue;
+                if (cached.IsBlank) return null;
+                if (cached.IsText) return cached.GetText();
+                if (cached.IsNumber) return cached.GetNumber().ToString(CultureInfo.InvariantCulture);
+                return cached.ToString();
+            }
             return cell.GetString();
         }
         catch
@@ -113,6 +132,33 @@ public static class ExcelService
         try
         {
             if (cell.IsEmpty()) return null;
+
+            // Handle formula cells by reading cached value
+            if (cell.HasFormula)
+            {
+                var cached = cell.CachedValue;
+                if (cached.IsBlank) return null;
+                if (cached.IsNumber) return cached.GetNumber();
+                if (cached.IsText)
+                {
+                    var str = cached.GetText().Trim();
+                    if (string.IsNullOrEmpty(str)) return null;
+                    if (double.TryParse(str, CultureInfo.InvariantCulture, out var p1)) return p1;
+                    if (double.TryParse(str.Replace(',', '.'), CultureInfo.InvariantCulture, out var p2)) return p2;
+                }
+                return null;
+            }
+
+            // Direct value cells
+            if (cell.DataType == XLDataType.Number)
+                return cell.GetDouble();
+
+            // Try string-to-number conversion
+            var text = cell.GetString()?.Trim();
+            if (string.IsNullOrEmpty(text)) return null;
+            if (double.TryParse(text, CultureInfo.InvariantCulture, out var result)) return result;
+            if (double.TryParse(text.Replace(',', '.'), CultureInfo.InvariantCulture, out result)) return result;
+
             return cell.GetDouble();
         }
         catch { return null; }
@@ -120,11 +166,7 @@ public static class ExcelService
 
     private static int? GetInt(IXLCell cell)
     {
-        try
-        {
-            if (cell.IsEmpty()) return null;
-            return (int)cell.GetDouble();
-        }
-        catch { return null; }
+        var num = GetNumber(cell);
+        return num.HasValue ? (int)num.Value : null;
     }
 }
