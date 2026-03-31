@@ -64,22 +64,20 @@ export default function PowerliftingOverlay({
   const overlayRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
-    if (visible && overlayRef.current) {
-      const ctx = gsap.context(() => {
-        const tl = gsap.timeline();
-        tl.from(['#category-box', '#movement-box'], { scaleX: 0, opacity: 0, duration: 0.6, ease: 'power3.out', stagger: 0.1 });
-        tl.from('#lifter-bg', { x: -50, opacity: 0, duration: 0.5, ease: 'power2.out' }, "-=0.4");
-        // Animate all children of the lifter row together (including logo)
-        tl.from('#lifter-content > *', { x: -20, opacity: 0, duration: 0.4, stagger: 0.05, ease: 'power2.out' }, "-=0.3");
-        tl.from('.attempt-box-wrapper', { scale: 0.5, opacity: 0, duration: 0.3, stagger: 0.1 }, "-=0.2");
-        tl.from('#total-box', { scale: 0.5, opacity: 0, duration: 0.5, ease: 'back.out(1.7)' });
-        if (glPoints != null) {
-          tl.from('#gl-box', { scale: 0.5, opacity: 0, duration: 0.4, ease: 'back.out(1.7)' }, "-=0.3");
-        }
-        tl.from('#competition-row', { y: 20, opacity: 0, duration: 0.6, ease: 'power2.out' }, "-=0.4");
-      }, overlayRef);
-      return () => ctx.revert();
+    if (!visible || !overlayRef.current) return;
+
+    const tl = gsap.timeline();
+    tl.fromTo(['#category-box', '#movement-box'], { scaleX: 0, opacity: 0 }, { scaleX: 1, opacity: 1, duration: 0.6, ease: 'power3.out', stagger: 0.1 });
+    tl.fromTo('#lifter-bg', { x: -50, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, ease: 'power2.out' }, "-=0.4");
+    tl.fromTo('#lifter-content > *', { x: -20, opacity: 0 }, { x: 0, opacity: 1, duration: 0.4, stagger: 0.05, ease: 'power2.out' }, "-=0.3");
+    tl.fromTo('.attempt-box-wrapper', { scale: 0.5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.3, stagger: 0.1 }, "-=0.2");
+    tl.fromTo('#total-box', { scale: 0.5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(1.7)' });
+    if (glPoints != null) {
+      tl.fromTo('#gl-box', { scale: 0.5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4, ease: 'back.out(1.7)' }, "-=0.3");
     }
+    tl.fromTo('#competition-row', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'power2.out' }, "-=0.4");
+
+    return () => { tl.kill(); };
   }, [visible, glPoints]);
 
   if (!visible || !lifter || !Array.isArray(attempts)) return null;
@@ -117,9 +115,6 @@ export default function PowerliftingOverlay({
       <div className="relative row-2">
         <div id="lifter-bg" className="card-bg absolute inset-0 -z-10" style={{ backgroundColor: s.colors.primary }} />
         <div id="lifter-content" className="flex gap-1 p-0.5 items-center">
-          {s.logoUrl && (
-            <img src={s.logoUrl} alt="" className="h-6 w-6 object-contain ml-1" />
-          )}
           <div className="font-bold text-lg ml-1" style={{ color: s.colors.accent }}>
             {lifter.firstName} {lifter.name}
           </div>
@@ -152,13 +147,16 @@ export default function PowerliftingOverlay({
         </div>
       </div>
 
-      {/* Row 3: Competition */}
+      {/* Row 3: Competition + Logo */}
       {s.visibility.competition && (
         <div id="competition-row" className="relative row-3">
           <div className="card-bg absolute inset-0 -z-10" style={{ backgroundColor: s.colors.primary }} />
           <div className="flex items-center p-0.5">
-            <div className="card-box text-xs px-2 py-0.5" style={{ backgroundColor: s.colors.primary, color: '#9ca3af' }}>
+            <div className="card-box text-xs px-2 py-0.5 flex items-center gap-1" style={{ backgroundColor: s.colors.primary, color: '#9ca3af' }}>
               {competition}
+              {s.logoUrl && (
+                <img src={s.logoUrl} alt="" className="h-5 w-5 object-contain" />
+              )}
             </div>
           </div>
         </div>

@@ -72,7 +72,7 @@ public static class OpenPowerliftingService
                 headerMap[headers[i].Trim()] = i;
 
             var competitions = new List<CompetitionEntry>();
-            double? bestSquat = null, bestBench = null, bestDead = null, bestTotal = null, bestDots = null;
+            double? bestSquat = null, bestBench = null, bestDead = null, bestTotal = null, bestGl = null;
 
             for (var i = 1; i < lines.Length; i++)
             {
@@ -83,20 +83,20 @@ public static class OpenPowerliftingService
                 var bench = GetField(fields, headerMap, "Best3BenchKg");
                 var deadlift = GetField(fields, headerMap, "Best3DeadliftKg");
                 var total = GetField(fields, headerMap, "TotalKg");
-                var dots = GetField(fields, headerMap, "Dots");
+                var gl = GetField(fields, headerMap, "Goodlift");
 
                 var squatVal = ParseDouble(squat);
                 var benchVal = ParseDouble(bench);
                 var deadVal = ParseDouble(deadlift);
                 var totalVal = ParseDouble(total);
-                var dotsVal = ParseDouble(dots);
+                var glVal = ParseDouble(gl);
 
                 // Track personal bests
                 if (squatVal.HasValue && (!bestSquat.HasValue || squatVal > bestSquat)) bestSquat = squatVal;
                 if (benchVal.HasValue && (!bestBench.HasValue || benchVal > bestBench)) bestBench = benchVal;
                 if (deadVal.HasValue && (!bestDead.HasValue || deadVal > bestDead)) bestDead = deadVal;
                 if (totalVal.HasValue && (!bestTotal.HasValue || totalVal > bestTotal)) bestTotal = totalVal;
-                if (dotsVal.HasValue && (!bestDots.HasValue || dotsVal > bestDots)) bestDots = dotsVal;
+                if (glVal.HasValue && (!bestGl.HasValue || glVal > bestGl)) bestGl = glVal;
 
                 competitions.Add(new CompetitionEntry(
                     Date: GetField(fields, headerMap, "Date"),
@@ -109,13 +109,13 @@ public static class OpenPowerliftingService
                     Bench: benchVal,
                     Deadlift: deadVal,
                     Total: totalVal,
-                    Dots: dotsVal
+                    GlPoints: glVal
                 ));
             }
 
             PersonalBests? pbs = null;
             if (bestSquat.HasValue || bestBench.HasValue || bestDead.HasValue || bestTotal.HasValue)
-                pbs = new PersonalBests(bestSquat, bestBench, bestDead, bestTotal, bestDots);
+                pbs = new PersonalBests(bestSquat, bestBench, bestDead, bestTotal, bestGl);
 
             return new OpenPowerliftingProfile(name, url, pbs, competitions.Count, competitions);
         }

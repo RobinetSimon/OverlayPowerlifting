@@ -77,6 +77,27 @@ export type RankedAthlete = {
   gl_points: number;
 };
 
+export type Group = {
+  id: string;
+  name: string;
+  excelPath: string;
+  athletes: AthleteRaw[];
+};
+
+export type Platform = {
+  id: string;
+  name: string;
+  groups: Group[];
+};
+
+export type RankingConfig = {
+  selectedGroupIds: string[];
+  sexFilter: ('M' | 'F')[];
+  ageCategoryFilter: string[];
+};
+
+export const AGE_CATEGORIES = ['SubJunior', 'Junior', 'Senior', 'Master 1', 'Master 2', 'Master 3', 'Master 4'] as const;
+
 export type BrowseEntry = {
   name: string;
   path: string;
@@ -101,7 +122,7 @@ export const DEFAULT_OVERLAY_SETTINGS: OverlaySettings = {
   position: 'bottom-left',
   scale: 1.0,
   visibility: {
-    glPoints: false,
+    glPoints: true,
     ageCategory: true,
     weightCategory: true,
     club: false,

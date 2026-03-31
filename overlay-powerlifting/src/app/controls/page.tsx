@@ -1,13 +1,25 @@
 'use client';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { AthleteRaw, OverlayData, AttemptRaw, RankedAthlete } from '../../types/athlete';
+import { AthleteRaw, OverlayData, AttemptRaw, RankedAthlete, Platform, RankingConfig, AGE_CATEGORIES } from '../../types/athlete';
 import LiftSelector from '../../components/liftSelector';
 import AthleteDetailCard from '../../components/athleteDetailCard';
 import OverlaySettingsPanel, { useOverlaySettings } from '../../components/overlaySettingsPanel';
 import OpenPowerliftingPanel from '../../components/openpowerliftingPanel';
 
+let nextId = 1;
+function genId() { return `id-${nextId++}-${Date.now()}`; }
+
 export default function Controls() {
-  const [athletes, setAthletes] = useState<AthleteRaw[]>([]);
+  // --- Platforms / Groups ---
+  const [platforms, setPlatforms] = useState<Platform[]>(() => [{
+    id: genId(), name: 'Plateau 1', groups: [{ id: genId(), name: 'Groupe 1', excelPath: '', athletes: [] }],
+  }]);
+
+  // All athletes aggregated from all groups
+  const getAllAthletes = useCallback(() => {
+    return platforms.flatMap(p => p.groups.flatMap(g => g.athletes));
+  }, [platforms]);
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedLift, setSelectedLift] = useState<'squat' | 'bench_press' | 'deadlift'>('squat');
 
@@ -16,8 +28,7 @@ export default function Controls() {
   const [progress, setProgress] = useState(0);
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const [excelPath, setExcelPath] = useState(process.env.NEXT_PUBLIC_DEFAULT_EXCEL_PATH || '');
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [competitionName, setCompetitionName] = useState(process.env.NEXT_PUBLIC_DEFAULT_COMPETITION_NAME || 'COMPETITION');
@@ -25,11 +36,14 @@ export default function Controls() {
 
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'controls' | 'athletes' | 'settings'>('controls');
+  const [activeTab, setActiveTab] = useState<'controls' | 'athletes' | 'settings' | 'ranking'>('controls');
 
-  // OpenPowerlifting state
-  const [oplAutoFetch, setOplAutoFetch] = useState(true);
-  const prevAthleteKeyRef = useRef<string>('');
+  // Ranking config
+  const [rankingConfig, setRankingConfig] = useState<RankingConfig>({
+    selectedGroupIds: [],
+    sexFilter: ['M', 'F'],
+    ageCategoryFilter: [...AGE_CATEGORIES],
+  });
 
   const { settings, setSettings } = useOverlaySettings();
 
@@ -68,19 +82,6 @@ export default function Controls() {
     };
   }, []);
 
-  // Initial data load
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch('/json/datas.json');
-        if (!res.ok) throw new Error('Fichier JSON initial introuvable.');
-        setAthletes(await res.json());
-      } catch {
-        setAthletes([]);
-      }
-    })();
-  }, []);
-
   const sendWs = useCallback((message: object) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify(message));
@@ -89,9 +90,11 @@ export default function Controls() {
     }
   }, []);
 
+  const athletes = getAllAthletes();
+
   const buildOverlayData = useCallback((athleteIndex: number): OverlayData | null => {
-    if (athletes.length === 0 || !athletes[athleteIndex]) return null;
     const a = athletes[athleteIndex];
+    if (!a) return null;
     return {
       category: a.weight_category,
       rankInfo: a.ranking ? `#${a.ranking}` : '',
@@ -115,34 +118,14 @@ export default function Controls() {
     sendWs({ type: 'UPDATE_OVERLAY', data: overlayData });
   }, [buildOverlayData, sendWs]);
 
-  // Replay animation for current athlete
   const replayAnimation = useCallback(() => {
     const overlayData = buildOverlayData(currentIndex);
     if (!overlayData) return;
-    // Send a HIDE first to reset, then re-send after a short delay
     sendWs({ type: 'HIDE_OVERLAY' });
     setTimeout(() => {
       sendWs({ type: 'UPDATE_OVERLAY', data: overlayData });
     }, 300);
   }, [buildOverlayData, currentIndex, sendWs]);
-
-  const sendRanking = useCallback(() => {
-    const ranked: RankedAthlete[] = athletes
-      .filter(a => a.gl_points != null && a.gl_points > 0)
-      .sort((a, b) => (b.gl_points ?? 0) - (a.gl_points ?? 0))
-      .slice(0, 5)
-      .map((a, i) => ({
-        rank: i + 1,
-        first_name: a.first_name,
-        last_name: a.last_name,
-        club: a.club,
-        weight_category: a.weight_category,
-        total: a.total ?? 0,
-        gl_points: a.gl_points ?? 0,
-      }));
-
-    sendWs({ type: 'UPDATE_RANKING', data: ranked });
-  }, [athletes, sendWs]);
 
   const nextAthlete = () => {
     if (athletes.length === 0) return;
@@ -153,8 +136,61 @@ export default function Controls() {
     sendAthleteData(parseInt(e.target.value, 10));
   };
 
-  // File upload via native file dialog
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // --- Platform / Group management ---
+  const addPlatform = () => {
+    const pNum = platforms.length + 1;
+    setPlatforms([...platforms, {
+      id: genId(), name: `Plateau ${pNum}`,
+      groups: [{ id: genId(), name: 'Groupe 1', excelPath: '', athletes: [] }],
+    }]);
+  };
+
+  const removePlatform = (pId: string) => {
+    setPlatforms(platforms.filter(p => p.id !== pId));
+  };
+
+  const updatePlatformName = (pId: string, name: string) => {
+    setPlatforms(platforms.map(p => p.id === pId ? { ...p, name } : p));
+  };
+
+  const addGroup = (pId: string) => {
+    setPlatforms(platforms.map(p => {
+      if (p.id !== pId) return p;
+      const gNum = p.groups.length + 1;
+      return { ...p, groups: [...p.groups, { id: genId(), name: `Groupe ${gNum}`, excelPath: '', athletes: [] }] };
+    }));
+  };
+
+  const removeGroup = (pId: string, gId: string) => {
+    setPlatforms(platforms.map(p => {
+      if (p.id !== pId) return p;
+      return { ...p, groups: p.groups.filter(g => g.id !== gId) };
+    }));
+  };
+
+  const updateGroupName = (pId: string, gId: string, name: string) => {
+    setPlatforms(platforms.map(p => {
+      if (p.id !== pId) return p;
+      return { ...p, groups: p.groups.map(g => g.id === gId ? { ...g, name } : g) };
+    }));
+  };
+
+  const updateGroupExcelPath = (pId: string, gId: string, excelPath: string) => {
+    setPlatforms(platforms.map(p => {
+      if (p.id !== pId) return p;
+      return { ...p, groups: p.groups.map(g => g.id === gId ? { ...g, excelPath } : g) };
+    }));
+  };
+
+  const updateGroupAthletes = (pId: string, gId: string, athletes: AthleteRaw[]) => {
+    setPlatforms(platforms.map(p => {
+      if (p.id !== pId) return p;
+      return { ...p, groups: p.groups.map(g => g.id === gId ? { ...g, athletes } : g) };
+    }));
+  };
+
+  // File upload for a specific group
+  const handleGroupFileUpload = async (pId: string, gId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -178,22 +214,23 @@ export default function Controls() {
       }
 
       const result = await response.json();
-      setExcelPath(result.path);
-      setAthletes(result.athletes);
+      updateGroupExcelPath(pId, gId, result.path);
+      updateGroupAthletes(pId, gId, result.athletes);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Erreur inconnue';
       setError(`Erreur upload : ${message}`);
     } finally {
       setIsLoading(false);
-      // Reset input so same file can be re-selected
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      const ref = fileInputRefs.current[gId];
+      if (ref) ref.value = '';
     }
   };
 
-  const callApi = async (): Promise<boolean> => {
+  // Refresh a specific group by path
+  const refreshGroup = async (pId: string, gId: string, excelPath: string) => {
     if (!excelPath) {
       setError('Merci de renseigner le chemin du fichier Excel.');
-      return false;
+      return;
     }
 
     setIsLoading(true);
@@ -210,12 +247,38 @@ export default function Controls() {
         throw new Error(errorData?.error || `Erreur serveur : ${response.statusText}`);
       }
 
-      setAthletes(await response.json());
-      return true;
+      const athleteData = await response.json();
+      updateGroupAthletes(pId, gId, athleteData);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Erreur inconnue';
       setError(`Erreur API : ${message}`);
-      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Refresh all groups
+  const refreshAllGroups = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const apiPort = process.env.NEXT_PUBLIC_API_PORT || '3000';
+      const apiUrl = `http://${window.location.hostname}:${apiPort}`;
+
+      for (const p of platforms) {
+        for (const g of p.groups) {
+          if (!g.excelPath) continue;
+          try {
+            const params = new URLSearchParams({ excelPath: g.excelPath });
+            const response = await fetch(`${apiUrl}/getData?${params.toString()}`);
+            if (response.ok) {
+              const athleteData = await response.json();
+              updateGroupAthletes(p.id, g.id, athleteData);
+            }
+          } catch { /* skip failed groups */ }
+        }
+      }
     } finally {
       setIsLoading(false);
     }
@@ -225,8 +288,7 @@ export default function Controls() {
     if (intervalRef.current) clearInterval(intervalRef.current);
     if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
 
-    const success = await callApi();
-    if (!success) return;
+    await refreshAllGroups();
 
     setProgress(0);
     const totalDuration = intervalSec * 1000;
@@ -238,7 +300,7 @@ export default function Controls() {
 
     intervalRef.current = setInterval(async () => {
       setProgress(0);
-      await callApi();
+      await refreshAllGroups();
     }, totalDuration);
   };
 
@@ -261,9 +323,73 @@ export default function Controls() {
     }
   }, [settings, sendWs]);
 
+  // --- Ranking ---
+  const getFilteredRankingAthletes = useCallback(() => {
+    const selectedAthletes = platforms
+      .flatMap(p => p.groups.filter(g => rankingConfig.selectedGroupIds.includes(g.id)).flatMap(g => g.athletes));
+
+    return selectedAthletes.filter(a => {
+      if (rankingConfig.sexFilter.length > 0 && !rankingConfig.sexFilter.includes(a.sex as 'M' | 'F')) return false;
+      if (rankingConfig.ageCategoryFilter.length > 0 && !rankingConfig.ageCategoryFilter.some(cat => a.category_age?.includes(cat))) return false;
+      return true;
+    });
+  }, [platforms, rankingConfig]);
+
+  const sendRanking = useCallback(() => {
+    const filtered = getFilteredRankingAthletes();
+    const ranked: RankedAthlete[] = filtered
+      .filter(a => a.gl_points != null && a.gl_points > 0)
+      .sort((a, b) => (b.gl_points ?? 0) - (a.gl_points ?? 0))
+      .slice(0, 5)
+      .map((a, i) => ({
+        rank: i + 1,
+        first_name: a.first_name,
+        last_name: a.last_name,
+        club: a.club,
+        weight_category: a.weight_category,
+        total: a.total ?? 0,
+        gl_points: a.gl_points ?? 0,
+      }));
+
+    if (ranked.length === 0) {
+      setError('Aucun athlète avec GL Points trouvé pour les filtres sélectionnés.');
+      return;
+    }
+
+    sendWs({ type: 'UPDATE_RANKING', data: ranked });
+  }, [getFilteredRankingAthletes, sendWs]);
+
+  const toggleRankingGroup = (gId: string) => {
+    setRankingConfig(prev => ({
+      ...prev,
+      selectedGroupIds: prev.selectedGroupIds.includes(gId)
+        ? prev.selectedGroupIds.filter(id => id !== gId)
+        : [...prev.selectedGroupIds, gId],
+    }));
+  };
+
+  const toggleSexFilter = (sex: 'M' | 'F') => {
+    setRankingConfig(prev => ({
+      ...prev,
+      sexFilter: prev.sexFilter.includes(sex)
+        ? prev.sexFilter.filter(s => s !== sex)
+        : [...prev.sexFilter, sex],
+    }));
+  };
+
+  const toggleAgeCategoryFilter = (cat: string) => {
+    setRankingConfig(prev => ({
+      ...prev,
+      ageCategoryFilter: prev.ageCategoryFilter.includes(cat)
+        ? prev.ageCategoryFilter.filter(c => c !== cat)
+        : [...prev.ageCategoryFilter, cat],
+    }));
+  };
+
   const tabs = [
     { id: 'controls' as const, label: 'Contrôles' },
     { id: 'athletes' as const, label: `Athlètes (${athletes.length})` },
+    { id: 'ranking' as const, label: 'Classement' },
     { id: 'settings' as const, label: 'Personnalisation' },
   ];
 
@@ -339,7 +465,7 @@ export default function Controls() {
                     className="w-full p-3 border border-gray-300 rounded-xl shadow-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     {athletes.map((athlete, index) => (
-                      <option key={`${athlete.first_name}-${index}`} value={index}>
+                      <option key={`${athlete.first_name}-${athlete.last_name}-${index}`} value={index}>
                         {athlete.first_name} {athlete.last_name} — {athlete.weight_category}
                       </option>
                     ))}
@@ -363,14 +489,6 @@ export default function Controls() {
                     Relancer
                   </button>
                 </div>
-
-                <button
-                  onClick={sendRanking}
-                  disabled={athletes.length === 0}
-                  className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg transition hover:-translate-y-0.5 disabled:opacity-50"
-                >
-                  Envoyer le Classement
-                </button>
               </div>
 
               {currentAthlete && (
@@ -383,40 +501,108 @@ export default function Controls() {
               <OpenPowerliftingPanel
                 firstName={currentAthlete.first_name}
                 lastName={currentAthlete.last_name}
-                autoFetch={oplAutoFetch}
-                onAutoFetchChange={setOplAutoFetch}
-                prevAthleteKeyRef={prevAthleteKeyRef}
               />
             )}
 
+            {/* Platform / Group Configuration */}
             <section className="space-y-6 p-6 bg-indigo-50 rounded-2xl shadow-inner">
-              <h2 className="text-2xl font-bold border-b pb-3">Configuration</h2>
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="excel-path" className="block text-sm font-medium mb-1">Fichier Excel</label>
-                  <div className="flex gap-2">
-                    <input
-                      id="excel-path" type="text" value={excelPath}
-                      onChange={(e) => setExcelPath(e.target.value)}
-                      className="flex-1 p-3 border rounded-xl"
-                      placeholder="Chemin vers le fichier Excel..."
-                    />
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-xl font-semibold text-sm transition"
-                    >
-                      Parcourir
-                    </button>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".xlsx,.xlsm,.xls"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
-                  </div>
-                </div>
+              <div className="flex items-center justify-between border-b pb-3">
+                <h2 className="text-2xl font-bold">Plateaux & Groupes</h2>
+                <button
+                  onClick={addPlatform}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-4 py-2 rounded-lg text-sm transition"
+                >
+                  + Ajouter un plateau
+                </button>
+              </div>
 
+              {platforms.map((platform) => (
+                <div key={platform.id} className="bg-white rounded-xl p-4 border border-indigo-200 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="text"
+                      value={platform.name}
+                      onChange={(e) => updatePlatformName(platform.id, e.target.value)}
+                      className="font-bold text-lg border-b border-transparent hover:border-gray-300 focus:border-indigo-500 outline-none px-1 bg-transparent"
+                    />
+                    <span className="text-xs text-gray-400">
+                      {platform.groups.reduce((s, g) => s + g.athletes.length, 0)} athlètes
+                    </span>
+                    <div className="flex-1" />
+                    <button
+                      onClick={() => addGroup(platform.id)}
+                      className="bg-blue-100 hover:bg-blue-200 text-blue-700 font-semibold px-3 py-1 rounded-lg text-sm transition"
+                    >
+                      + Groupe
+                    </button>
+                    {platforms.length > 1 && (
+                      <button
+                        onClick={() => removePlatform(platform.id)}
+                        className="text-red-400 hover:text-red-600 text-sm transition"
+                        title="Supprimer le plateau"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+
+                  {platform.groups.map((group) => (
+                    <div key={group.id} className="ml-4 p-3 bg-gray-50 rounded-lg border border-gray-200 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={group.name}
+                          onChange={(e) => updateGroupName(platform.id, group.id, e.target.value)}
+                          className="font-semibold text-sm border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none px-1 bg-transparent"
+                        />
+                        <span className="text-xs text-gray-400">({group.athletes.length} athlètes)</span>
+                        <div className="flex-1" />
+                        {platform.groups.length > 1 && (
+                          <button
+                            onClick={() => removeGroup(platform.id, group.id)}
+                            className="text-red-400 hover:text-red-600 text-xs transition"
+                            title="Supprimer le groupe"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={group.excelPath}
+                          onChange={(e) => updateGroupExcelPath(platform.id, group.id, e.target.value)}
+                          className="flex-1 p-2 border rounded-lg text-sm"
+                          placeholder="Chemin vers le fichier Excel..."
+                        />
+                        <button
+                          onClick={() => fileInputRefs.current[group.id]?.click()}
+                          className="bg-gray-200 hover:bg-gray-300 px-3 py-1.5 rounded-lg font-semibold text-xs transition"
+                        >
+                          Parcourir
+                        </button>
+                        <input
+                          ref={el => { fileInputRefs.current[group.id] = el; }}
+                          type="file"
+                          accept=".xlsx,.xlsm,.xls"
+                          onChange={(e) => handleGroupFileUpload(platform.id, group.id, e)}
+                          className="hidden"
+                        />
+                        <button
+                          onClick={() => refreshGroup(platform.id, group.id, group.excelPath)}
+                          disabled={!group.excelPath || isLoading}
+                          className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1.5 rounded-lg font-semibold text-xs transition disabled:opacity-50"
+                        >
+                          Rafraîchir
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))}
+
+              {/* Global settings */}
+              <div className="space-y-4 pt-4 border-t border-indigo-200">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label htmlFor="competition-name" className="block text-sm font-medium mb-1">Nom de la compétition</label>
@@ -428,13 +614,13 @@ export default function Controls() {
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-4 mt-4">
+                <div className="flex flex-col sm:flex-row gap-4">
                   <button
                     onClick={startAutoRefresh}
                     disabled={isLoading}
                     className="bg-gradient-to-r from-purple-600 to-fuchsia-700 text-white font-bold px-6 py-3 rounded-xl shadow-lg transition hover:-translate-y-0.5 flex-1 disabled:opacity-50"
                   >
-                    {isLoading ? 'Chargement...' : 'Lancer le rafraîchissement'}
+                    {isLoading ? 'Chargement...' : 'Rafraîchir tous les groupes'}
                   </button>
                   <button
                     onClick={stopAutoRefresh}
@@ -444,7 +630,7 @@ export default function Controls() {
                   </button>
                 </div>
 
-                <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden mt-4 shadow-inner">
+                <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden shadow-inner">
                   <div className="h-full bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full transition-all duration-100" style={{ width: `${progress}%` }} />
                 </div>
               </div>
@@ -456,7 +642,7 @@ export default function Controls() {
         {activeTab === 'athletes' && (
           <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
             {athletes.length === 0 ? (
-              <p className="text-center text-gray-500 py-8">Aucun athlète chargé. Importez un fichier Excel.</p>
+              <p className="text-center text-gray-500 py-8">Aucun athlète chargé. Importez des fichiers Excel dans l&apos;onglet Contrôles.</p>
             ) : (
               athletes.map((athlete, index) => (
                 <AthleteDetailCard
@@ -467,6 +653,147 @@ export default function Controls() {
                 />
               ))
             )}
+          </div>
+        )}
+
+        {/* Tab: Ranking */}
+        {activeTab === 'ranking' && (
+          <div className="space-y-6">
+            {/* Group selection */}
+            <section className="p-6 bg-indigo-50 rounded-2xl shadow-inner border border-indigo-100">
+              <h2 className="text-xl font-bold border-b pb-3 mb-4">Sélection des groupes</h2>
+              {platforms.map(platform => (
+                <div key={platform.id} className="mb-3">
+                  <h3 className="font-semibold text-sm text-gray-700 mb-1">{platform.name}</h3>
+                  <div className="flex flex-wrap gap-2 ml-2">
+                    {platform.groups.map(group => (
+                      <label key={group.id} className="flex items-center gap-1.5 cursor-pointer text-sm bg-white px-3 py-1.5 rounded-lg border hover:border-indigo-400 transition">
+                        <input
+                          type="checkbox"
+                          checked={rankingConfig.selectedGroupIds.includes(group.id)}
+                          onChange={() => toggleRankingGroup(group.id)}
+                          className="w-4 h-4 rounded"
+                        />
+                        {group.name}
+                        <span className="text-xs text-gray-400">({group.athletes.length})</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              {platforms.flatMap(p => p.groups).length === 0 && (
+                <p className="text-gray-400 text-sm">Ajoutez des groupes dans l&apos;onglet Contrôles.</p>
+              )}
+            </section>
+
+            {/* Filters */}
+            <section className="p-6 bg-purple-50 rounded-2xl shadow-inner border border-purple-100">
+              <h2 className="text-xl font-bold border-b pb-3 mb-4">Filtres</h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Sex filter */}
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-600 uppercase mb-2">Sexe</h3>
+                  <div className="flex gap-3">
+                    {(['M', 'F'] as const).map(sex => (
+                      <label key={sex} className="flex items-center gap-1.5 cursor-pointer text-sm bg-white px-4 py-2 rounded-lg border hover:border-purple-400 transition">
+                        <input
+                          type="checkbox"
+                          checked={rankingConfig.sexFilter.includes(sex)}
+                          onChange={() => toggleSexFilter(sex)}
+                          className="w-4 h-4 rounded"
+                        />
+                        {sex === 'M' ? 'Homme' : 'Femme'}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Age category filter */}
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-600 uppercase mb-2">Catégories d&apos;âge</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {AGE_CATEGORIES.map(cat => (
+                      <label key={cat} className="flex items-center gap-1.5 cursor-pointer text-sm bg-white px-3 py-1.5 rounded-lg border hover:border-purple-400 transition">
+                        <input
+                          type="checkbox"
+                          checked={rankingConfig.ageCategoryFilter.includes(cat)}
+                          onChange={() => toggleAgeCategoryFilter(cat)}
+                          className="w-3.5 h-3.5 rounded"
+                        />
+                        {cat}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Preview */}
+            <section className="p-6 bg-green-50 rounded-2xl shadow-inner border border-green-100">
+              <div className="flex items-center justify-between border-b pb-3 mb-4">
+                <h2 className="text-xl font-bold">Aperçu du classement</h2>
+                <button
+                  onClick={sendRanking}
+                  disabled={rankingConfig.selectedGroupIds.length === 0}
+                  className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold px-6 py-2.5 rounded-xl shadow-lg transition hover:-translate-y-0.5 disabled:opacity-50"
+                >
+                  Envoyer le Classement
+                </button>
+              </div>
+
+              {(() => {
+                const filtered = getFilteredRankingAthletes();
+                const ranked = filtered
+                  .filter(a => a.gl_points != null && a.gl_points > 0)
+                  .sort((a, b) => (b.gl_points ?? 0) - (a.gl_points ?? 0));
+
+                if (rankingConfig.selectedGroupIds.length === 0) {
+                  return <p className="text-gray-400 text-sm text-center py-4">Sélectionnez au moins un groupe ci-dessus.</p>;
+                }
+
+                if (ranked.length === 0) {
+                  return <p className="text-gray-400 text-sm text-center py-4">Aucun athlète avec GL Points trouvé pour les filtres sélectionnés. ({filtered.length} athlètes correspondent aux filtres mais sans GL Points)</p>;
+                }
+
+                return (
+                  <div className="max-h-[400px] overflow-y-auto rounded-lg border">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-100 sticky top-0">
+                        <tr>
+                          <th className="text-left p-2 w-10">#</th>
+                          <th className="text-left p-2">Nom</th>
+                          <th className="text-left p-2">Club</th>
+                          <th className="text-center p-2">Sexe</th>
+                          <th className="text-left p-2">Cat. âge</th>
+                          <th className="text-left p-2">Cat. poids</th>
+                          <th className="text-right p-2">Total</th>
+                          <th className="text-right p-2">GL Points</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {ranked.map((a, i) => (
+                          <tr key={`${a.first_name}-${a.last_name}-${i}`} className={`border-t hover:bg-gray-50 ${i < 5 ? 'font-semibold' : ''}`}>
+                            <td className="p-2">
+                              <span className={`${i === 0 ? 'text-yellow-500' : i === 1 ? 'text-gray-400' : i === 2 ? 'text-amber-600' : ''}`}>
+                                {i + 1}
+                              </span>
+                            </td>
+                            <td className="p-2">{a.first_name} {a.last_name}</td>
+                            <td className="p-2 text-gray-500">{a.club}</td>
+                            <td className="p-2 text-center">{a.sex}</td>
+                            <td className="p-2">{a.category_age}</td>
+                            <td className="p-2">{a.weight_category}</td>
+                            <td className="p-2 text-right">{a.total?.toFixed(1) ?? '-'}</td>
+                            <td className="p-2 text-right font-bold text-purple-700">{a.gl_points?.toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
+            </section>
           </div>
         )}
 

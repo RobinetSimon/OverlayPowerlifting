@@ -57,7 +57,7 @@ public record PersonalBests(
     [property: JsonPropertyName("best_bench")] double? BestBench,
     [property: JsonPropertyName("best_deadlift")] double? BestDeadlift,
     [property: JsonPropertyName("best_total")] double? BestTotal,
-    [property: JsonPropertyName("best_dots")] double? BestDots);
+    [property: JsonPropertyName("best_gl_points")] double? BestGlPoints);
 
 public record CompetitionEntry(
     [property: JsonPropertyName("date")] string? Date,
@@ -70,7 +70,7 @@ public record CompetitionEntry(
     [property: JsonPropertyName("bench")] double? Bench,
     [property: JsonPropertyName("deadlift")] double? Deadlift,
     [property: JsonPropertyName("total")] double? Total,
-    [property: JsonPropertyName("dots")] double? Dots);
+    [property: JsonPropertyName("gl_points")] double? GlPoints);
 
 public record OpenPowerliftingProfile(
     [property: JsonPropertyName("name")] string Name,

@@ -116,12 +116,31 @@ export default function OverlaySettingsPanel({ settings, onChange, onApply }: Pr
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const img = new Image();
     const reader = new FileReader();
     reader.onload = () => {
-      const dataUrl = reader.result as string;
-      // Store as data URL directly - this avoids server upload issues
-      // and ensures the logo is always available
-      onChange({ ...settings, logoUrl: dataUrl });
+      img.onload = () => {
+        const MAX = 128;
+        let w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+          const ratio = Math.min(MAX / w, MAX / h);
+          w = Math.round(w * ratio);
+          h = Math.round(h * ratio);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+        ctx.drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/png');
+        onChange({ ...settings, logoUrl: dataUrl });
+      };
+      img.onerror = () => {
+        // Fallback: skip resize for unsupported formats
+        onChange({ ...settings, logoUrl: reader.result as string });
+      };
+      img.src = reader.result as string;
     };
     reader.readAsDataURL(file);
   };

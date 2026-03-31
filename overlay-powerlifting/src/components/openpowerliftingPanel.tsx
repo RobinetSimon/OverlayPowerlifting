@@ -1,12 +1,12 @@
 'use client';
-import React, { useState, useEffect, useCallback, MutableRefObject } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 type PersonalBests = {
   best_squat: number | null;
   best_bench: number | null;
   best_deadlift: number | null;
   best_total: number | null;
-  best_dots: number | null;
+  best_gl_points: number | null;
 };
 
 type CompetitionEntry = {
@@ -20,7 +20,7 @@ type CompetitionEntry = {
   bench: number | null;
   deadlift: number | null;
   total: number | null;
-  dots: number | null;
+  gl_points: number | null;
 };
 
 type Profile = {
@@ -34,16 +34,14 @@ type Profile = {
 type Props = {
   firstName: string;
   lastName: string;
-  autoFetch: boolean;
-  onAutoFetchChange: (v: boolean) => void;
-  prevAthleteKeyRef: MutableRefObject<string>;
 };
 
-export default function OpenPowerliftingPanel({ firstName, lastName, autoFetch, onAutoFetchChange, prevAthleteKeyRef }: Props) {
+export default function OpenPowerliftingPanel({ firstName, lastName }: Props) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
+  const prevAthleteKeyRef = useRef<string>('');
 
   const athleteKey = `${firstName}-${lastName}`;
 
@@ -79,13 +77,13 @@ export default function OpenPowerliftingPanel({ firstName, lastName, autoFetch, 
     }
   }, [firstName, lastName]);
 
-  // Auto-fetch when athlete changes
+  // Always auto-fetch when athlete changes
   useEffect(() => {
-    if (autoFetch && athleteKey !== prevAthleteKeyRef.current) {
+    if (athleteKey !== prevAthleteKeyRef.current && firstName && lastName) {
       prevAthleteKeyRef.current = athleteKey;
       search();
     }
-  }, [athleteKey, autoFetch, search, prevAthleteKeyRef]);
+  }, [athleteKey, search, firstName, lastName]);
 
   function PrCard({ label, value, unit }: { label: string; value: number | null | undefined; unit?: string }) {
     return (
@@ -109,25 +107,6 @@ export default function OpenPowerliftingPanel({ firstName, lastName, autoFetch, 
           {profile && !loading && <span className="text-sm font-normal text-green-600 ml-2">({profile.competition_count} compétitions)</span>}
           {error && !loading && <span className="text-sm font-normal text-red-500 ml-2">Non trouvé</span>}
         </button>
-
-        <div className="flex items-center gap-3">
-          <label className="flex items-center gap-1.5 cursor-pointer text-sm">
-            <input
-              type="checkbox"
-              checked={autoFetch}
-              onChange={(e) => onAutoFetchChange(e.target.checked)}
-              className="w-4 h-4 rounded"
-            />
-            Auto
-          </label>
-          <button
-            onClick={search}
-            disabled={loading || !firstName || !lastName}
-            className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-3 py-1.5 rounded-lg text-sm transition disabled:opacity-50"
-          >
-            {loading ? '...' : 'Rechercher'}
-          </button>
-        </div>
       </div>
 
       {expanded && (
@@ -155,7 +134,7 @@ export default function OpenPowerliftingPanel({ firstName, lastName, autoFetch, 
                     <PrCard label="Bench" value={profile.personal_bests.best_bench} unit="kg" />
                     <PrCard label="Deadlift" value={profile.personal_bests.best_deadlift} unit="kg" />
                     <PrCard label="Total" value={profile.personal_bests.best_total} unit="kg" />
-                    <PrCard label="DOTS" value={profile.personal_bests.best_dots} />
+                    <PrCard label="GL Points" value={profile.personal_bests.best_gl_points} />
                   </div>
                 </div>
               )}
@@ -175,7 +154,7 @@ export default function OpenPowerliftingPanel({ firstName, lastName, autoFetch, 
                           <th className="text-right p-2">BP</th>
                           <th className="text-right p-2">DL</th>
                           <th className="text-right p-2">Total</th>
-                          <th className="text-right p-2">DOTS</th>
+                          <th className="text-right p-2">GL</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -188,7 +167,7 @@ export default function OpenPowerliftingPanel({ firstName, lastName, autoFetch, 
                             <td className="p-2 text-right">{c.bench ?? '-'}</td>
                             <td className="p-2 text-right">{c.deadlift ?? '-'}</td>
                             <td className="p-2 text-right font-semibold">{c.total ?? '-'}</td>
-                            <td className="p-2 text-right">{c.dots ?? '-'}</td>
+                            <td className="p-2 text-right">{c.gl_points ?? '-'}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -200,7 +179,7 @@ export default function OpenPowerliftingPanel({ firstName, lastName, autoFetch, 
           )}
 
           {!profile && !error && !loading && (
-            <p className="text-gray-400 text-sm text-center py-2">Cliquez sur Rechercher ou activez Auto.</p>
+            <p className="text-gray-400 text-sm text-center py-2">Recherche automatique en cours...</p>
           )}
         </div>
       )}
